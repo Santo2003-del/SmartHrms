@@ -157,8 +157,16 @@ const superAdminLogin = async (req, res) => {
 /* ================= 3) EMPLOYEE REGISTRATION (PUBLIC) ================= */
 const registerEmployee = async (req, res) => {
   try {
+    console.log("INCOMING REGISTRATION DATA:");
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+
     const { name, email, mobile, password, designation, companyId, faceDescriptor } = req.body || {};
     const e = normalizeEmail(email);
+
+    if (req.fileValidationError) {
+      return res.status(400).json({ message: req.fileValidationError });
+    }
 
     if (!name || !e || !password || !companyId) {
       return res.status(400).json({ message: 'Name, email, password, companyId required' });
@@ -201,6 +209,7 @@ const registerEmployee = async (req, res) => {
       userId: user._id
     });
   } catch (error) {
+    console.error("REGISTER ERROR:", error);
     res.status(500).json({ message: 'Server Error during registration' });
   }
 };

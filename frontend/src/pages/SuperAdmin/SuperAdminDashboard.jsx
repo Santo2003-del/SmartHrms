@@ -27,7 +27,7 @@ import {
 import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
-const libraries = ["places"];
+const libraries = ["places", "geometry"];
 const mapStyle = { width: "100%", height: "260px", borderRadius: "14px" };
 
 const safeStr = (v) => (v === null || v === undefined ? "" : String(v));

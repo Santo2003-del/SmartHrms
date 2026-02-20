@@ -106,8 +106,8 @@ const Home = () => {
               Experience the next generation of HR. Real-time biometrics, automated payroll, and predictive people analytics—all in one intelligent ecosystem.
             </motion.p>
 
-            <motion.div variants={fadeInUp} style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-              <Link to="/register" style={{ textDecoration: "none" }}>
+            <motion.div variants={fadeInUp} className="hero-btns" style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+              <Link to="/partner-with-us" style={{ textDecoration: "none" }}>
                 <motion.button
                   whileHover={{ scale: 1.02, boxShadow: "0 0 40px rgba(0, 255, 157, 0.4)" }}
                   whileTap={{ scale: 0.98 }}
@@ -238,6 +238,11 @@ const Home = () => {
             .container > div { display: flex; flex-direction: column; align-items: center; }
             motion.p { margin: 0 auto 3rem !important; }
             .container div[style*="position: absolute"] { display: none; } /* Hide floating badges on mobile */
+          }
+          @media (max-width: 640px) {
+            .hero-btns { flex-direction: column !important; width: 100% !important; gap: 1rem !important; }
+            .hero-btns a { width: 100% !important; }
+            .hero-btns button { width: 100% !important; }
           }
         `}</style>
       </section>
@@ -740,7 +745,7 @@ const Home = () => {
             </p>
 
             <div style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-              <Link to="/register">
+              <Link to="/partner-with-us">
                 <motion.button
                   whileHover={{ scale: 1.05, boxShadow: "0 15px 40px rgba(0,0,0,0.3)" }}
                   whileTap={{ scale: 0.95 }}

@@ -6,7 +6,7 @@ const { ensureDir } = require('../utils/fileSecurity');
 
 // Separate folders (SaaS safe: public static serve mat karo; download via secure route)
 const imageDir = path.resolve(process.cwd(), 'uploads/images');
-const taskDir  = path.resolve(process.cwd(), 'uploads/tasks');
+const taskDir = path.resolve(process.cwd(), 'uploads/tasks');
 
 ensureDir(imageDir);
 ensureDir(taskDir);
@@ -32,10 +32,7 @@ const taskStorage = multer.diskStorage({
 });
 
 const allowImage = (file) => {
-  const allowedExt = ['.jpg', '.jpeg', '.png', '.webp'];
-  const allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
-  const ext = path.extname(file.originalname || '').toLowerCase();
-  return allowedExt.includes(ext) && allowedMime.includes(file.mimetype);
+  return file.mimetype.startsWith('image/');
 };
 
 const allowTaskFile = (file) => {
@@ -57,10 +54,14 @@ const uploadImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (req, file, cb) => {
     try {
-      if (!allowImage(file)) return cb(new Error('Only images (jpg, png, webp) allowed'));
+      if (!allowImage(file)) {
+        req.fileValidationError = 'Only images allowed';
+        return cb(null, false, new Error('Only images allowed'));
+      }
       cb(null, true);
     } catch (e) {
-      cb(new Error('Invalid image upload'));
+      req.fileValidationError = 'Invalid image upload';
+      cb(null, false, new Error('Invalid image upload'));
     }
   }
 });

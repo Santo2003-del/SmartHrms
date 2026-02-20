@@ -22,7 +22,7 @@ import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-m
 import { submitInquiry } from "../../services/api";
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
-const libraries = ["places"];
+const libraries = ["places", "geometry"];
 
 const mapContainerStyle = {
   width: "100%",

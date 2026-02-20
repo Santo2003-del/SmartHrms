@@ -168,7 +168,7 @@ const LeaveRequest = () => {
   const types = ["Paid", "Unpaid", "WFH"];
 
   return (
-    <div className="page slide-up">
+    <div className="page slide-up" style={{ backgroundColor: '#f3fdf9', color: '#0f172a', minHeight: '100vh' }}>
       <header className="head">
         <div className="headTop">
           <button className="back" onClick={() => navigate("/employee/dashboard")} type="button">

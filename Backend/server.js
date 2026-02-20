@@ -24,8 +24,22 @@ const app = express();
 app.use(
   helmet({ crossOriginResourcePolicy: false, contentSecurityPolicy: false }),
 );
+// ── Dynamic CORS ──
+const ALLOWED_ORIGINS = [
+  "https://smarthrms.cloud",
+  "https://www.smarthrms.cloud",
+];
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:5173", "http://localhost:5174"],
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return cb(null, true);
+    // Allow listed production domains
+    if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+    // Allow any localhost port for development
+    if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
+    // Block everything else
+    return cb(new Error("CORS blocked: " + origin));
+  },
   credentials: true
 }));
 app.use(express.json({ limit: "15mb" }));

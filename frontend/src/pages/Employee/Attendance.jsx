@@ -8,6 +8,7 @@ import React, {
 import API from "../../services/api";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
   FaHistory,
   FaCoffee,
@@ -21,6 +22,7 @@ import {
   FaMapMarkerAlt,
   FaTimes,
   FaSpinner,
+  FaArrowLeft,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
@@ -37,7 +39,7 @@ import {
    GOOGLE MAPS CONFIG
 ========================= */
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
-const LIBRARIES = ["geometry"];
+const LIBRARIES = ["places", "geometry"];
 
 /* =========================
    GEO HELPERS
@@ -79,7 +81,7 @@ const computeDistanceMeters = (a, b) => {
       );
       return Number.isFinite(d) ? d : null;
     }
-  } catch (e) {}
+  } catch (e) { }
   return haversineMeters(a, b);
 };
 
@@ -295,6 +297,7 @@ import Pagination from "../../components/Pagination";
 
 const Attendance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState(null);
@@ -710,7 +713,12 @@ const Attendance = () => {
   }, [history, todayYMD]);
 
   return (
-    <div className="page slide-up">
+    <div className="page slide-up" style={{ backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        <button onClick={() => navigate('/employee/dashboard')} type="button" style={{ border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', padding: '10px 14px', borderRadius: 14, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+          <FaArrowLeft /> Dashboard
+        </button>
+      </div>
       <header className="head">
         <div className="head-left">
           <div className="iconBox">
@@ -1039,6 +1047,8 @@ const Attendance = () => {
           margin: 0 auto;
           font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
           color: var(--text);
+          background: var(--bg);
+          min-height: 100vh;
         }
 
         .head{
@@ -1114,8 +1124,8 @@ const Attendance = () => {
         .warnBox{ padding: 10px 12px; background:#fff7ed; color:#9a3412; font-weight: 950; border-bottom:1px solid #fed7aa; font-size: 12px; }
 
         .breakCard{
-          background: linear-gradient(135deg, rgba(79,70,229,0.10), rgba(16,185,129,0.10));
-          border: 1px solid rgba(199,210,254,0.8);
+          background: linear-gradient(135deg, #eef2ff, #ecfdf5);
+          border: 1px solid #c7d2fe;
           border-radius: 22px;
           padding: 18px;
           display:flex;
@@ -1126,9 +1136,9 @@ const Attendance = () => {
           box-shadow: 0 12px 22px rgba(79,70,229,0.06);
           flex-wrap: wrap;
         }
-        .bkLeft h3{ margin:0; font-size: 16px; font-weight: 950; }
-        .bkLeft p{ margin:6px 0 0; color: rgba(15,23,42,0.72); font-weight: 650; }
-        .hint{ margin-top: 10px; font-size: 12px; color: rgba(15,23,42,0.70); font-weight: 800; background: rgba(255,255,255,0.65); padding: 6px 10px; border-radius: 12px; width: fit-content; }
+        .bkLeft h3{ margin:0; font-size: 16px; font-weight: 950; color: #0f172a; }
+        .bkLeft p{ margin:6px 0 0; color: #334155; font-weight: 650; }
+        .hint{ margin-top: 10px; font-size: 12px; color: #334155; font-weight: 800; background: rgba(255,255,255,0.85); padding: 6px 10px; border-radius: 12px; width: fit-content; }
         .bkBtns{ display:flex; gap: 10px; }
 
         .bar{
@@ -1151,9 +1161,10 @@ const Attendance = () => {
           width: 100%;
           border:none; outline:none;
           font-weight: 800;
-          color: var(--text);
+          color: #0f172a;
           background: transparent;
         }
+        .search input::placeholder{ color: #94a3b8; }
 
         .toggle{
           border: 1px solid var(--border);
@@ -1187,10 +1198,10 @@ const Attendance = () => {
         .tbl th{
           text-align: left;
           padding: 16px 16px;
-          background: rgba(248,250,252,0.95);
-          border-bottom: 1px solid rgba(226,232,240,0.9);
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
           font-size: 12px;
-          color: var(--muted);
+          color: #64748b;
           text-transform: uppercase;
           letter-spacing: .9px;
           font-weight: 950;
@@ -1202,6 +1213,8 @@ const Attendance = () => {
           font-weight: 650;
           font-size: 13px;
           vertical-align: middle;
+          color: var(--text);
+          background: #ffffff;
         }
         .tr:hover{ background: rgba(248,250,252,0.70); }
         .msg{ padding: 36px !important; text-align:center; color: var(--muted); font-weight: 900; }

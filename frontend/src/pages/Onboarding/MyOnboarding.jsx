@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { getMyOnboarding, updateOnboardingItem } from "../../services/api";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
 
 const MyOnboarding = () => {
   const [onboarding, setOnboarding] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
@@ -33,13 +36,18 @@ const MyOnboarding = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: 20 }}>Loading Checklist...</div>;
-  if (!onboarding) return <div style={{ padding: 20 }}>🎉 No onboarding tasks assigned yet!</div>;
+  if (loading) return <div style={{ padding: 20, backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh' }}>Loading Checklist...</div>;
+  if (!onboarding) return <div style={{ padding: 20, backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>🎉 No onboarding tasks assigned yet!</div>;
 
   const items = Array.isArray(onboarding?.items) ? onboarding.items : [];
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={() => navigate('/employee/dashboard')} type="button" style={{ border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', padding: '10px 14px', borderRadius: 14, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+          <FaArrowLeft /> Dashboard
+        </button>
+      </div>
       <h2>My Onboarding Checklist</h2>
       <p style={{ opacity: 0.7 }}>Template: {onboarding?.templateId?.name || "—"}</p>
 

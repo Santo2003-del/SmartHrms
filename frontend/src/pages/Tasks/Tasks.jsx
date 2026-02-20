@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import API, { assignTask, getAllTasks, getMyTasks, submitTask, reviewTask, updateTaskStatus } from "../../services/api";
 import { toast } from "react-toastify";
-import { FaTasks, FaDownload, FaFileUpload, FaCheckCircle, FaClock, FaExclamationCircle, FaPlay, FaPaperPlane } from "react-icons/fa";
+import { FaTasks, FaDownload, FaFileUpload, FaCheckCircle, FaClock, FaExclamationCircle, FaPlay, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { useClientPagination } from "../../utils/useClientPagination";
 import Pagination from "../../components/Pagination";
 
@@ -35,6 +36,7 @@ const handleDownload = async (taskId, fileUrl, fileName) => {
 
 const Tasks = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const isHR = ["Admin", "CompanyAdmin", "SuperAdmin"].includes(user?.role);
 
     const [tasks, setTasks] = useState([]);
@@ -156,7 +158,14 @@ const Tasks = () => {
     };
 
     return (
-        <div className="page-anim" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+        <div className="page-anim" style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Inter, sans-serif', backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh' }}>
+
+            {/* Back Button */}
+            <div style={{ marginBottom: 16 }}>
+                <button onClick={() => navigate('/employee/dashboard')} type="button" style={{ border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', padding: '10px 14px', borderRadius: 14, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                    <FaArrowLeft /> Dashboard
+                </button>
+            </div>
 
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>

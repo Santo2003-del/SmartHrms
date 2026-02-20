@@ -74,7 +74,7 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <div className={`nav-pill ${scrolled ? "scrolled" : ""}`}>
+      <div className={`nav-container ${scrolled ? "scrolled" : ""}`}>
         {/* LOGO */}
         <Link to="/" className="logo" onClick={closeMenu}>
           <span className="logo-icon">
@@ -106,7 +106,11 @@ const Navbar = () => {
                 <button onClick={() => { logout(); closeMenu(); }} className="mobile-btn logout">Logout</button>
               </>
             ) : (
-              <Link to="/login" onClick={closeMenu} className="mobile-btn login">Login</Link>
+              <>
+                <Link to="/login" onClick={closeMenu} className="mobile-btn login">Login</Link>
+                <Link to="/register" onClick={closeMenu} className="mobile-btn get-started">Get Started</Link>
+                <Link to="/partner-with-us" onClick={closeMenu} className="mobile-btn partner">Partner With Us</Link>
+              </>
             )}
           </div>
         </ul>
@@ -141,45 +145,39 @@ const Navbar = () => {
         /* --- CORE NAVBAR LAYOUT --- */
         .navbar {
           position: fixed;
-          top: 24px;
+          top: 0;
           left: 0;
           right: 0;
           display: flex;
           justify-content: center;
           align-items: flex-start;
           z-index: 1000;
-          padding: 0 20px;
+          padding: 0;
           pointer-events: none;
         }
 
-        .nav-pill {
+        .nav-container {
           pointer-events: auto;
           background: rgba(18, 18, 18, 0.9);
           backdrop-filter: blur(20px) saturate(180%);
           -webkit-backdrop-filter: blur(20px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 999px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           
           /* PADDING & SIZE */
-          padding: 8px 32px; 
-          min-height: 64px;
+          padding: 0 48px; 
+          height: 72px;
 
           display: flex;
           align-items: center; /* STRICT VERTICAL CENTER */
-          justify-content: space-between; 
-          gap: 40px;
           
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-          width: auto;
-          max-width: 98%;
+          width: 100%;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .nav-pill.scrolled {
+        .nav-container.scrolled {
           background: rgba(5, 5, 5, 0.98);
           border-color: rgba(255, 255, 255, 0.15);
           box-shadow: 0 10px 40px rgba(0,0,0,0.7);
-          padding: 6px 28px;
         }
 
         /* --- LOGO --- */
@@ -195,10 +193,9 @@ const Navbar = () => {
           height: 100%;
           padding: 0;
           margin: 0;
-          margin-right: 40px; /* Add explicit spacing */
+          margin-right: auto; /* Pushes menu and actions to the right */
           line-height: 1;
           overflow: visible; /* FORCE VISIBLE */
-          max-width: none;
         }
 
         /* LOGO TEXT - Ensure baseline alignment with icon */
@@ -208,8 +205,6 @@ const Navbar = () => {
           letter-spacing: -0.5px;
           display: inline-block !important; /* Force inline block */
           white-space: nowrap;
-          min-width: max-content;
-          width: auto;
         }
 
         /* LOGO ICON WRAPPER */
@@ -217,7 +212,7 @@ const Navbar = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #00ff9d;
+          color: #00ff9d; /* Existing color */
           font-size: 1.6rem;
           filter: drop-shadow(0 0 8px rgba(0, 255, 157, 0.5));
           height: 100%;
@@ -234,6 +229,7 @@ const Navbar = () => {
           gap: 32px;
           list-style: none;
           margin: 0;
+          margin-right: 32px; /* Space between links and actions */
           padding: 0;
           align-items: center; /* STRICT VERTICAL CENTER */
           height: 100%;
@@ -321,55 +317,124 @@ const Navbar = () => {
         .desktop-only { display: flex; }
 
         @media (max-width: 1024px) {
-          .navbar { top: 10px; padding: 0 10px; }
-          .nav-pill {
-            width: 100%;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px 20px;
+          .nav-container {
+            padding: 0 20px;
             justify-content: space-between;
-            background: rgba(10, 10, 10, 0.95);
-            min-height: 64px;
-            gap: 0;
+            background: #0b0f19 !important; /* Force solid dark background */
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-bottom: 1px solid rgba(0, 255, 157, 0.15); /* Awesome subtle premium accent border */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.9); /* Deep shadow for 3D separation */
+            height: 64px;
           }
           
+          .logo { margin-right: 0; position: relative; z-index: 10001; }
+          .logo-text { font-size: 1.3rem; } /* Slightly scale down for sleek mobile fit */
+          .logo-icon { font-size: 1.4rem; }
+          
+          .hamburger { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            position: relative; 
+            z-index: 10001; 
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05); /* Premium button styling */
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.2rem;
+            color: #fff;
+            transition: all 0.2s ease;
+          }
+          
+          .hamburger:hover, .hamburger:active {
+            background: rgba(0, 255, 157, 0.1);
+            border-color: rgba(0, 255, 157, 0.4);
+            color: #00ff9d;
+            transform: scale(0.95);
+          }
+          
+          .menu { margin-right: 0; }
+          
+          /* CRITICAL BUG FIX: Solid Mobile Menu Overlay */
           .menu {
-            position: absolute;
-            top: calc(100% + 10px);
+            position: fixed;
+            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(20px);
+            width: 100vw;
+            height: 100vh;
+            background: #0b0f19; /* 100% SOLID DARK BACKGROUND */
             flex-direction: column;
-            padding: 24px;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px;
-            transform: translateY(-10px);
+            padding: 90px 24px 32px 24px; /* Extra top padding to clear the logo/hamburger */
             opacity: 0;
             visibility: hidden;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.3s ease;
             pointer-events: none;
             align-items: stretch;
-            gap: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            gap: 12px; /* Neat vertical column */
+            z-index: 9999; /* CRITICAL: Highest z-index to cover hero text */
+            overflow-y: auto;
+            backdrop-filter: none; /* STRICTLY REMOVE glassmorphism */
+            -webkit-backdrop-filter: none;
+            box-shadow: none;
+            border: none;
+            transform: none; /* Remove transform issues */
+            margin: 0;
           }
-          .menu.open { transform: translateY(0); opacity: 1; visibility: visible; pointer-events: auto; }
           
-          .menu a { padding: 12px; border-radius: 8px; font-size: 1rem; }
-          .menu a:hover { background: rgba(255,255,255,0.05); }
+          .menu.open { 
+            opacity: 1; 
+            visibility: visible; 
+            pointer-events: auto; 
+          }
+          
+          .menu a { 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            text-align: center; 
+            background: rgba(255, 255, 255, 0.02); /* Subtle button look for links */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+          }
+          .menu a:active { 
+            background: rgba(0, 255, 157, 0.1); 
+            border-color: rgba(0, 255, 157, 0.3);
+            color: #00ff9d;
+          }
           .active-dot { display: none; }
           
-          .hamburger { display: block; }
           .desktop-only { display: none; }
-          .mobile-only { display: flex; flex-direction: column; width: 100%; gap: 12px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+          /* Partner With Us now visible on mobile */
+          
+          /* Push buttons to bottom of menu */
+          .mobile-only { 
+            display: flex; 
+            flex-direction: column; 
+            width: 100%; 
+            gap: 14px; 
+            margin-top: auto; /* Pushes to bottom */
+            padding-top: 24px; 
+            border-top: 1px solid rgba(255, 255, 255, 0.05); /* Clean separator */
+          }
           
           .mobile-btn {
-            width: 100%; padding: 14px; border-radius: 8px; font-weight: 700; text-align: center;
-            border: none; text-decoration: none; cursor: pointer; font-size: 0.95rem;
+            width: 100%; padding: 16px; border-radius: 12px; font-weight: 700; text-align: center;
+            border: none; text-decoration: none; cursor: pointer; font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
           }
-          .mobile-btn.login { background: #00ff9d; color: #000; }
-          .mobile-btn.dashboard { background: rgba(255,255,255,0.1); color: #fff; }
-          .mobile-btn.logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+          .mobile-btn.login { background: #00ff9d; color: #000; box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2); }
+          .mobile-btn.get-started { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+          .mobile-btn.partner { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.05); }
+          .mobile-btn.dashboard { background: rgba(0, 255, 157, 0.1); color: #00ff9d; border: 1px solid rgba(0,255,157,0.3); }
+          .mobile-btn.logout { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
         }
       `}</style>
     </nav>
