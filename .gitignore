@@ -40,3 +40,6 @@ Backend/uploads/images/*
 !Backend/uploads/tasks/
 Backend/uploads/tasks/*
 !Backend/uploads/tasks/.gitkeep
+
+# Sensitive deployment files
+DEPLOYMENT_FIXES.md
