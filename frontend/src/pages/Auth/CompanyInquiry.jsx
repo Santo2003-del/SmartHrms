@@ -341,7 +341,7 @@ const CompanyInquiry = () => {
                   <label>Email Address <span className="req">*</span></label>
                   <div className="input-wrap">
                     <FaEnvelope className="field-icon" />
-                    <input type="email" placeholder="hr@company.com" value={form.email} autoComplete="username" onChange={e => setField("email", e.target.value)} required />
+                    <input type="email" placeholder="Enter work email address" value={form.email} autoComplete="username" onChange={e => setField("email", e.target.value)} required />
                   </div>
                 </div>
 
@@ -389,16 +389,16 @@ const CompanyInquiry = () => {
                 <div className="grid-3">
                   <div className="field-group">
                     <label>Start Time</label>
-                    <div className="input-wrap"><input type="time" value={form.officeStartTime} onChange={e => setField("officeStartTime", e.target.value)} /></div>
+                    <div className="input-wrap"><input type="time" className="no-icon" value={form.officeStartTime} onChange={e => setField("officeStartTime", e.target.value)} /></div>
                   </div>
                   <div className="field-group">
                     <label>End Time</label>
-                    <div className="input-wrap"><input type="time" value={form.officeEndTime} onChange={e => setField("officeEndTime", e.target.value)} /></div>
+                    <div className="input-wrap"><input type="time" className="no-icon" value={form.officeEndTime} onChange={e => setField("officeEndTime", e.target.value)} /></div>
                   </div>
                   <div className="field-group">
                     <label>Time Zone</label>
                     <div className="input-wrap">
-                      <select value={form.timeZone} onChange={e => setField("timeZone", e.target.value)}>
+                      <select className="no-icon" value={form.timeZone} onChange={e => setField("timeZone", e.target.value)} style={{ color: form.timeZone ? '#ffffff' : '#cbd5e1' }}>
                         {TIMEZONE_OPTIONS.map(z => <option key={z} value={z}>{z}</option>)}
                       </select>
                     </div>
@@ -586,9 +586,16 @@ const CompanyInquiry = () => {
           color: #fff;
           padding: 10px;
         }
+
         .input-wrap input::placeholder, .input-wrap textarea::placeholder {
-          color: #6b7280; /* Darker placeholder */
+          color: #cbd5e1; /* Better placeholder visibility */
           opacity: 1;
+        }
+
+        .input-wrap input[type="time"]::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          opacity: 0.8;
+          cursor: pointer;
         }
 
         .password-toggle {
@@ -612,6 +619,10 @@ const CompanyInquiry = () => {
           background: rgba(255, 255, 255, 0.08);
           box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
           outline: none;
+        }
+
+        .input-wrap .no-icon {
+          padding-left: 15px !important;
         }
 
         .field-icon {

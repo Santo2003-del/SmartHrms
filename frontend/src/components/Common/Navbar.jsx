@@ -142,7 +142,6 @@ const Navbar = () => {
       </div>
 
       <style>{`
-        /* --- CORE NAVBAR LAYOUT --- */
         .navbar {
           position: fixed;
           top: 0;
@@ -151,7 +150,7 @@ const Navbar = () => {
           display: flex;
           justify-content: center;
           align-items: flex-start;
-          z-index: 1000;
+          z-index: 99999;
           padding: 0;
           pointer-events: none;
         }
@@ -338,19 +337,19 @@ const Navbar = () => {
             justify-content: center;
             position: relative; 
             z-index: 10001; 
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.05); /* Premium button styling */
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 255, 157, 0.1); /* Visible premium button styling */
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 1.2rem;
-            color: #fff;
+            border: 1px solid rgba(0, 255, 157, 0.4);
+            font-size: 1.5rem;
+            color: #00ff9d;
             transition: all 0.2s ease;
           }
           
           .hamburger:hover, .hamburger:active {
-            background: rgba(0, 255, 157, 0.1);
-            border-color: rgba(0, 255, 157, 0.4);
+            background: rgba(0, 255, 157, 0.2);
+            border-color: rgba(0, 255, 157, 0.6);
             color: #00ff9d;
             transform: scale(0.95);
           }
@@ -416,9 +415,10 @@ const Navbar = () => {
             flex-direction: column; 
             width: 100%; 
             gap: 14px; 
-            margin-top: auto; /* Pushes to bottom */
+            margin-top: 20px; /* Instead of auto, give some spacing */
             padding-top: 24px; 
             border-top: 1px solid rgba(255, 255, 255, 0.05); /* Clean separator */
+            padding-bottom: 40px; /* Extra padding at bottom so buttons are completely visible */
           }
           
           .mobile-btn {
@@ -429,6 +429,9 @@ const Navbar = () => {
             align-items: center;
             justify-content: center;
             gap: 8px;
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+            min-height: 52px;
+            max-height: 56px; /* Stop flex block children from stretching uncontrollably */
           }
           .mobile-btn.login { background: #00ff9d; color: #000; box-shadow: 0 4px 15px rgba(0, 255, 157, 0.2); }
           .mobile-btn.get-started { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
