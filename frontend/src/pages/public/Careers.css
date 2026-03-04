@@ -255,6 +255,10 @@ body {
     transition: color 0.2s;
 }
 
+.checkbox-row span {
+    color: #e2e8f0;
+}
+
 .checkbox-row:hover {
     color: var(--primary-color);
 }
@@ -399,7 +403,7 @@ body {
     align-items: center;
     gap: 6px;
     font-size: 0.9rem;
-    color: #475569;
+    color: #cbd5e1;
     font-weight: 500;
 }
 
@@ -412,7 +416,7 @@ body {
 
 .job-desc {
     font-size: 0.95rem;
-    color: #64748b;
+    color: #cbd5e1;
     line-height: 1.6;
     margin-bottom: 20px;
     display: -webkit-box;

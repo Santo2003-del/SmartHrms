@@ -341,7 +341,7 @@ const CompanyInquiry = () => {
                   <label>Email Address <span className="req">*</span></label>
                   <div className="input-wrap">
                     <FaEnvelope className="field-icon" />
-                    <input type="email" placeholder="hr@company.com" value={form.email} onChange={e => setField("email", e.target.value)} required />
+                    <input type="email" placeholder="hr@company.com" value={form.email} autoComplete="username" onChange={e => setField("email", e.target.value)} required />
                   </div>
                 </div>
 

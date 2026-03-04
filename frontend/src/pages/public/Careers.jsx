@@ -347,13 +347,13 @@ const Careers = () => {
           {loading ? (
             <div className="loader-box">
               <FaSpinner className="spinner-icon" />
-              <p style={{ marginTop: '1rem', color: '#64748b' }}>Loading positions...</p>
+              <p style={{ marginTop: '1rem', color: '#cbd5e1' }}>Loading positions...</p>
             </div>
           ) : filteredJobs.length === 0 ? (
             <div className="empty-box">
               <FaSearch style={{ fontSize: '3rem', color: '#cbd5e1', marginBottom: '1rem' }} />
               <h3>No jobs found</h3>
-              <p style={{ color: '#64748b' }}>Try adjusting your search or filters.</p>
+              <p style={{ color: '#cbd5e1' }}>Try adjusting your search or filters.</p>
               <button className="reset-filters-btn" onClick={resetFilters} style={{ marginTop: '1rem' }}>Clear All Filters</button>
             </div>
           ) : (
@@ -421,7 +421,7 @@ const Careers = () => {
         <div className="careers-container">
           <div className="section-head">
             <h2>Why Join Us?</h2>
-            <p style={{ color: '#64748b' }}>We believe in growth, balance, and innovation.</p>
+            <p style={{ color: '#cbd5e1' }}>We believe in growth, balance, and innovation.</p>
           </div>
           <div className="benefits-grid">
             <div className="benefit-card">
