@@ -16,9 +16,11 @@ import {
   FaUsers,
   FaBriefcase,
   FaIdCard,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Autocomplete, Marker } from "@react-google-maps/api";
 import { submitInquiry } from "../../services/api";
 
 const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
@@ -61,6 +63,8 @@ const CompanyInquiry = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const tz = useMemo(() => {
     try {
@@ -142,12 +146,13 @@ const CompanyInquiry = () => {
     toast.success("Location Selected! 📍");
   };
 
-  const onMarkerDragEnd = (e) => {
+  // Update marker position when place changes
+  const onMarkerDragEnd = useCallback((e) => {
     const lat = e.latLng.lat();
     const lng = e.latLng.lng();
     setMarkerPos({ lat, lng });
     setForm((prev) => ({ ...prev, lat, lng }));
-  };
+  }, []);
 
   const validate = () => {
     if (!form.companyName || !form.contactPerson || !form.email || !form.mobile) {
@@ -345,14 +350,34 @@ const CompanyInquiry = () => {
                     <label>Password <span className="req">*</span></label>
                     <div className="input-wrap">
                       <FaLock className="field-icon" />
-                      <input type="password" placeholder="Create Password" value={form.password} onChange={e => setField("password", e.target.value)} required />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="Create Password"
+                        value={form.password}
+                        onChange={e => setField("password", e.target.value)}
+                        required
+                      />
+                      <div className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
+                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                      </div>
                     </div>
                   </div>
                   <div className="field-group">
                     <label>Confirm Password <span className="req">*</span></label>
                     <div className="input-wrap">
                       <FaLock className="field-icon" />
-                      <input type="password" placeholder="Confirm Password" value={form.confirmPassword} onChange={e => setField("confirmPassword", e.target.value)} required />
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="Confirm Password"
+                        value={form.confirmPassword}
+                        onChange={e => setField("confirmPassword", e.target.value)}
+                        required
+                      />
+                      <div className="password-toggle" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                        {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -399,8 +424,18 @@ const CompanyInquiry = () => {
                         <input type="text" placeholder="Search your office location..." />
                       </div>
                     </Autocomplete>
-                    <GoogleMap mapContainerStyle={mapContainerStyle} center={markerPos} zoom={5} onLoad={onLoad} onUnmount={onUnmount}>
-                      <Marker position={markerPos} draggable={true} onDragEnd={onMarkerDragEnd} />
+                    <GoogleMap
+                      mapContainerStyle={mapContainerStyle}
+                      center={markerPos}
+                      zoom={5}
+                      onLoad={onLoad}
+                      onUnmount={onUnmount}
+                    >
+                      <Marker
+                        position={markerPos}
+                        draggable
+                        onDragEnd={onMarkerDragEnd}
+                      />
                     </GoogleMap>
                   </div>
                 ) : <div className="map-loading">Loading Map...</div>}
@@ -554,6 +589,23 @@ const CompanyInquiry = () => {
         .input-wrap input::placeholder, .input-wrap textarea::placeholder {
           color: #6b7280; /* Darker placeholder */
           opacity: 1;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
+          transition: color 0.2s;
+        }
+        .password-toggle:hover {
+          color: #10b981;
         }
         .input-wrap input:focus, .input-wrap select:focus, .input-wrap textarea:focus {
           border-color: var(--primary-color);

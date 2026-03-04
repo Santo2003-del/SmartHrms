@@ -89,10 +89,9 @@ const CompanyDashboard = () => {
   const safeLogout = useCallback(
     (msg) => {
       if (msg) toast.error(msg);
-      logout();
-      navigate(ROUTES.COMPANY_LOGIN);
+      logout('/');
     },
-    [logout, navigate]
+    [logout]
   );
 
   const normalizeDashboard = (payload) => {

@@ -90,28 +90,28 @@ const computeDistanceMeters = (a, b) => {
  * 1) Quick fix (low latency) to immediately show something
  * 2) Refine fix (high accuracy) if needed
  */
-const getQuickPosition = ({ timeoutMs = 5500 } = {}) => {
+const getQuickPosition = ({ timeoutMs = 3000 } = {}) => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation)
       return reject(new Error("Geolocation not supported"));
     navigator.geolocation.getCurrentPosition(resolve, reject, {
       enableHighAccuracy: false,
       timeout: timeoutMs,
-      maximumAge: 10000, // allow small cache for speed
+      maximumAge: 30000, // use cached position for instant result
     });
   });
 };
 
 const getAccuratePosition = ({
-  desiredAccuracy = 60,
-  maxWaitMs = 12000,
+  desiredAccuracy = 80,
+  maxWaitMs = 6000,
   enableHighAccuracy = true,
 } = {}) => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation)
       return reject(new Error("Geolocation not supported"));
 
-    const opts = { enableHighAccuracy, timeout: 12000, maximumAge: 0 };
+    const opts = { enableHighAccuracy, timeout: 6000, maximumAge: 5000 };
     let best = null;
     let watchId = null;
     let done = false;
@@ -148,7 +148,7 @@ const getAccuratePosition = ({
         watchId = navigator.geolocation.watchPosition(
           (p) => consider(p),
           (e) => (best ? finish(best, true) : fail(e)),
-          { enableHighAccuracy, maximumAge: 0, timeout: 12000 },
+          { enableHighAccuracy, maximumAge: 2000, timeout: 6000 },
         );
 
         setTimeout(() => finish(best || pos, true), maxWaitMs);
@@ -471,7 +471,7 @@ const Attendance = () => {
         // 1) QUICK fix
         let quick = null;
         try {
-          const posQuick = await getQuickPosition({ timeoutMs: 5500 });
+          const posQuick = await getQuickPosition({ timeoutMs: 3000 });
           quick = applyPos(posQuick);
         } catch (e) {
           // ignore; will try accurate below
@@ -486,7 +486,7 @@ const Attendance = () => {
         // 2) REFINE fix (fast cap 12s)
         const posAcc = await getAccuratePosition({
           desiredAccuracy,
-          maxWaitMs: 12000,
+          maxWaitMs: 6000,
           enableHighAccuracy: true,
         });
 

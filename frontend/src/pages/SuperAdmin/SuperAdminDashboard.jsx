@@ -362,9 +362,9 @@ const SuperAdminDashboard = () => {
 
       {/* MAIN CARD */}
       <div className="sa-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+        <div className="sad-toolbar">
           {/* TABS */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="sad-tab-row">
             <button
               className={`sa-btn ${activeTab === "clients" ? "sa-btn-primary" : "sa-btn-outline"}`}
               onClick={() => setActiveTab("clients")}
@@ -376,28 +376,28 @@ const SuperAdminDashboard = () => {
               onClick={() => setActiveTab("inquiries")}
             >
               <FaUserPlus /> Inquiries
-              {topStats.inquiries > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7em' }}>{topStats.inquiries}</span>}
+              {topStats.inquiries > 0 && <span className="sad-badge">{topStats.inquiries}</span>}
             </button>
             <button
               className={`sa-btn ${activeTab === "requests" ? "sa-btn-primary" : "sa-btn-outline"}`}
               onClick={() => setActiveTab("requests")}
             >
               <FaChartLine /> Requests
-              {topStats.requests > 0 && <span style={{ background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7em' }}>{topStats.requests}</span>}
+              {topStats.requests > 0 && <span className="sad-badge">{topStats.requests}</span>}
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="sad-actions-row">
             <button className="sa-btn sa-btn-outline" onClick={fetchData} disabled={syncing}>
               <FaSync className={syncing ? "spin" : ""} /> Sync
             </button>
-            <div style={{ position: 'relative' }}>
-              <FaSearch style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            <div className="sad-search-wrap">
+              <FaSearch className="sad-search-icon" />
               <input
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ padding: '8px 10px 8px 34px', border: '1px solid #e2e8f0', borderRadius: '8px', outline: 'none' }}
+                className="sad-search-input"
               />
             </div>
           </div>
@@ -409,7 +409,7 @@ const SuperAdminDashboard = () => {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No records found</div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div className="sad-table-wrap">
             <table className="sa-table">
               <thead>
                 <tr>
@@ -429,26 +429,26 @@ const SuperAdminDashboard = () => {
                   return (
                     <tr key={item._id}>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ width: '40px', height: '40px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#2563eb' }}>
+                        <div className="sad-user-cell">
+                          <div className="sad-avatar">
                             {name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 600, color: '#0f172a' }}>{name}</div>
-                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{email}</div>
+                            <div className="sad-name">{name}</div>
+                            <div className="sad-email">{email}</div>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <div style={{ fontSize: '0.9rem', color: '#475569' }}><FaPhone style={{ fontSize: '0.8rem' }} /> {phone || "N/A"}</div>
+                        <div className="sad-phone"><FaPhone className="sad-phone-icon" /> {phone || "N/A"}</div>
                       </td>
                       <td>
                         <span className={`sa-badge ${status === 'Active' ? 'badge-active' : 'badge-pending'}`}>
                           {status}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <td className="sad-actions-cell">
+                        <div className="sad-actions-btns">
                           {activeTab === "clients" && (
                             <>
                               <button className="sa-btn sa-btn-outline" onClick={() => openEditModal(item)}><FaEdit /></button>
@@ -481,33 +481,33 @@ const SuperAdminDashboard = () => {
 
       {/* EDIT MODAL */}
       {showEditModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="sa-card" style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div className="sad-modal-overlay">
+          <div className="sa-card sad-modal-card">
+            <div className="sad-modal-head">
               <h3>Edit Company</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FaTimes /></button>
+              <button onClick={() => setShowEditModal(false)} className="sad-close-btn"><FaTimes /></button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Name</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editForm.companyName} onChange={e => setEditForm({ ...editForm, companyName: e.target.value })} />
+            <div className="sad-form-grid">
+              <div className="sad-fg">
+                <label className="sad-label">Name</label>
+                <input className="sad-input" value={editForm.companyName} onChange={e => setEditForm({ ...editForm, companyName: e.target.value })} />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Email</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
+              <div className="sad-fg">
+                <label className="sad-label">Email</label>
+                <input className="sad-input" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Phone</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editForm.mobile} onChange={e => setEditForm({ ...editForm, mobile: e.target.value })} />
+              <div className="sad-fg">
+                <label className="sad-label">Phone</label>
+                <input className="sad-input" value={editForm.mobile} onChange={e => setEditForm({ ...editForm, mobile: e.target.value })} />
               </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Address</label>
-                <textarea style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} rows="2" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
+              <div className="sad-fg sad-fg-full">
+                <label className="sad-label">Address</label>
+                <textarea className="sad-input" rows="2" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
               </div>
             </div>
 
-            <div style={{ height: '300px', background: '#f1f5f9', borderRadius: '8px', marginBottom: '20px', overflow: 'hidden' }}>
+            <div className="sad-map-container">
               {!isLoaded ? <p style={{ padding: '20px' }}>Loading Maps...</p> : (
                 <>
                   <Autocomplete onLoad={a => setAutocomplete(a)} onPlaceChanged={onPlaceChanged}>
@@ -525,7 +525,7 @@ const SuperAdminDashboard = () => {
               )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="sad-modal-foot">
               <button className="sa-btn sa-btn-outline" onClick={() => setShowEditModal(false)}>Cancel</button>
               <button className="sa-btn sa-btn-primary" onClick={submitEdit} disabled={isSubmitting}>{isSubmitting ? "Saving..." : "Save Changes"}</button>
             </div>
@@ -535,37 +535,37 @@ const SuperAdminDashboard = () => {
 
       {/* EDIT INQUIRY MODAL */}
       {showEditInquiryModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="sa-card" style={{ width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div className="sad-modal-overlay">
+          <div className="sa-card sad-modal-card">
+            <div className="sad-modal-head">
               <h3>Edit Inquiry</h3>
-              <button onClick={() => setShowEditInquiryModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FaTimes /></button>
+              <button onClick={() => setShowEditInquiryModal(false)} className="sad-close-btn"><FaTimes /></button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Company Name</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editInquiryForm.companyName} onChange={e => setEditInquiryForm({ ...editInquiryForm, companyName: e.target.value })} />
+            <div className="sad-form-grid">
+              <div className="sad-fg">
+                <label className="sad-label">Company Name</label>
+                <input className="sad-input" value={editInquiryForm.companyName} onChange={e => setEditInquiryForm({ ...editInquiryForm, companyName: e.target.value })} />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Contact Person</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editInquiryForm.contactPerson} onChange={e => setEditInquiryForm({ ...editInquiryForm, contactPerson: e.target.value })} />
+              <div className="sad-fg">
+                <label className="sad-label">Contact Person</label>
+                <input className="sad-input" value={editInquiryForm.contactPerson} onChange={e => setEditInquiryForm({ ...editInquiryForm, contactPerson: e.target.value })} />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Email</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editInquiryForm.email} onChange={e => setEditInquiryForm({ ...editInquiryForm, email: e.target.value })} />
+              <div className="sad-fg">
+                <label className="sad-label">Email</label>
+                <input className="sad-input" value={editInquiryForm.email} onChange={e => setEditInquiryForm({ ...editInquiryForm, email: e.target.value })} />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Mobile</label>
-                <input style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} value={editInquiryForm.mobile} onChange={e => setEditInquiryForm({ ...editInquiryForm, mobile: e.target.value })} />
+              <div className="sad-fg">
+                <label className="sad-label">Mobile</label>
+                <input className="sad-input" value={editInquiryForm.mobile} onChange={e => setEditInquiryForm({ ...editInquiryForm, mobile: e.target.value })} />
               </div>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.9rem' }}>Address</label>
-                <textarea style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} rows="2" value={editInquiryForm.address} onChange={e => setEditInquiryForm({ ...editInquiryForm, address: e.target.value })} />
+              <div className="sad-fg sad-fg-full">
+                <label className="sad-label">Address</label>
+                <textarea className="sad-input" rows="2" value={editInquiryForm.address} onChange={e => setEditInquiryForm({ ...editInquiryForm, address: e.target.value })} />
               </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div className="sad-modal-foot">
               <button className="sa-btn sa-btn-outline" onClick={() => setShowEditInquiryModal(false)}>Cancel</button>
               <button className="sa-btn sa-btn-primary" onClick={submitInquiryEdit} disabled={isSubmitting}>{isSubmitting ? "Updating..." : "Update Inquiry"}</button>
             </div>
@@ -573,6 +573,64 @@ const SuperAdminDashboard = () => {
         </div>
       )}
 
+      {/* STYLES */}
+      <style>{`
+        .sad-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:16px}
+        .sad-tab-row{display:flex;gap:8px;flex-wrap:wrap}
+        .sad-badge{background:#ef4444;color:#fff;padding:2px 6px;border-radius:10px;font-size:.7em}
+        .sad-actions-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+        .sad-search-wrap{position:relative}
+        .sad-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8}
+        .sad-search-input{padding:8px 10px 8px 34px;border:1px solid #e2e8f0;border-radius:8px;outline:none;width:200px;font-size:.9rem}
+        .sad-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .sad-user-cell{display:flex;align-items:center;gap:12px}
+        .sad-avatar{width:40px;height:40px;background:#f1f5f9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2563eb;flex-shrink:0}
+        .sad-name{font-weight:600;color:#0f172a}
+        .sad-email{font-size:.85rem;color:#64748b}
+        .sad-phone{font-size:.9rem;color:#475569}
+        .sad-phone-icon{font-size:.8rem}
+        .sad-actions-cell{text-align:right}
+        .sad-actions-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+        .sad-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+        .sad-modal-card{width:90%;max-width:600px;max-height:90vh;overflow-y:auto}
+        .sad-modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .sad-modal-head h3{margin:0;font-size:1.15rem;font-weight:700}
+        .sad-close-btn{background:none;border:none;cursor:pointer;font-size:1.1rem;color:#64748b;padding:4px}
+        .sad-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+        .sad-fg-full{grid-column:span 2}
+        .sad-label{display:block;margin-bottom:4px;font-size:.9rem;font-weight:600;color:#475569}
+        .sad-input{width:100%;padding:8px;border-radius:6px;border:1px solid #e2e8f0;outline:none;font-size:.9rem;box-sizing:border-box}
+        .sad-input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+        .sad-map-container{height:300px;background:#f1f5f9;border-radius:8px;margin-bottom:20px;overflow:hidden}
+        .sad-modal-foot{display:flex;justify-content:flex-end;gap:10px}
+
+        @media(max-width:768px){
+          .sad-toolbar{flex-direction:column;align-items:stretch}
+          .sad-tab-row{overflow-x:auto;padding-bottom:4px}
+          .sad-actions-row{width:100%;justify-content:space-between}
+          .sad-search-input{width:100%}
+          .sad-search-wrap{flex:1}
+          .sad-form-grid{grid-template-columns:1fr}
+          .sad-fg-full{grid-column:span 1}
+          .sad-modal-card{width:95%;max-width:95vw}
+          .sad-modal-foot{flex-direction:column}
+          .sad-modal-foot .sa-btn{width:100%;justify-content:center}
+          .sad-map-container{height:220px}
+        }
+        @media(max-width:480px){
+          .sad-toolbar{gap:10px}
+          .sad-tab-row{gap:6px}
+          .sad-tab-row .sa-btn{padding:7px 10px;font-size:.8rem}
+          .sad-user-cell{gap:8px}
+          .sad-avatar{width:32px;height:32px;font-size:.8rem}
+          .sad-name{font-size:.85rem}
+          .sad-email{font-size:.78rem}
+          .sad-actions-btns{gap:6px}
+          .sad-actions-btns .sa-btn{padding:6px 8px;font-size:.78rem}
+          .sad-map-container{height:180px}
+          .sad-input{padding:7px;font-size:.85rem}
+        }
+      `}</style>
     </SuperAdminLayout>
   );
 };

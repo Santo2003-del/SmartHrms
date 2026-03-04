@@ -20,11 +20,19 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
 
     const loadModels = async () => {
       try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-        ]);
+        // Skip loading if models are already cached in memory
+        const alreadyLoaded =
+          faceapi.nets.tinyFaceDetector.isLoaded &&
+          faceapi.nets.faceLandmark68Net.isLoaded &&
+          faceapi.nets.faceRecognitionNet.isLoaded;
+
+        if (!alreadyLoaded) {
+          await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+          ]);
+        }
         if (mounted) setModelsLoaded(true);
       } catch (err) {
         console.error(err);
@@ -58,8 +66,8 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
         .detectSingleFace(
           img,
           new faceapi.TinyFaceDetectorOptions({
-            inputSize: 224,
-            scoreThreshold: 0.6
+            inputSize: 160,
+            scoreThreshold: 0.5
           })
         )
         .withFaceLandmarks()
@@ -117,9 +125,10 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
             mirrored
             screenshotFormat="image/jpeg"
             videoConstraints={{
-              width: 420,
-              height: 420,
-              facingMode: "user"
+              width: 320,
+              height: 320,
+              facingMode: "user",
+              frameRate: { ideal: 15 }
             }}
             className="webcam"
           />

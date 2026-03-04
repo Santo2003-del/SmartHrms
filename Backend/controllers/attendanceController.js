@@ -631,11 +631,7 @@ const getUserHistory = async (req, res) => {
       .sort({ date: -1 })
       .lean();
 
-    console.log("DEBUG: getUserHistory", {
-      targetUserId,
-      realId: user._id,
-      count: history.length
-    });
+
 
     return res.json(history);
   } catch (err) {
@@ -654,7 +650,7 @@ const getUserHistory = async (req, res) => {
  */
 const markManualAttendance = async (req, res) => {
   try {
-    console.log("markManualAttendance called"); // Debug log
+
 
     // --- Internal Helpers for safety ---
     function parseHHMM(timeStr) {

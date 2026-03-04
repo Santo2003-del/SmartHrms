@@ -112,7 +112,7 @@ const LoginGateway = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 60px 20px;
+          padding: 120px 20px 60px;
           font-family: 'Outfit', sans-serif;
           position: relative;
           overflow: hidden;
@@ -318,6 +318,7 @@ const LoginGateway = () => {
         }
 
         @media (max-width: 600px) {
+          .gateway-page { padding-top: 100px; }
           .roles-grid { grid-template-columns: 1fr; }
           .gateway-header h1 { font-size: 2.5rem; }
         }

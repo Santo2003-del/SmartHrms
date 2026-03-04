@@ -1,77 +1,74 @@
-# 🚀 SmartHrms – Critical Deployment Bug Fixes
+# Deployment Guide: Local to VPS via GitHub
 
-**Date:** 2026-02-20
-**Author:** ADMIN
-**Scope:** Production deployment fixes – Mobile API, CORS, Navbar, Hero Buttons
+Follow these exact steps to push your local updates to GitHub (`Santo2003-del/SmartHrms`) and pull them onto your live VPS server using your root SSH access.
 
 ---
 
-## Summary
+## Part 1: Push Updates from Your Local Machine to GitHub
 
-Fixed critical post-deployment issues affecting mobile users: API connection failures,
-navbar text overlap, and hero button misalignment on small screens.
+Open a terminal on your **local machine** (where your project folder is located) and run:
 
----
+```bash
+# 1. Add all modified and deleted files to staging
+git add -A
 
-## Changes
+# 2. Commit the changes locally
+git commit -m "Security hardening, unused file cleanup, and console fixes"
 
-### 1. CORS – Dynamic Origin (Backend)
-**File:** `Backend/server.js`
-
-- Replaced static `origin: [...]` array with a **dynamic origin function**
-- Allows `smarthrms.cloud` (with/without `www`), any `localhost:*` port, and null-origin requests (mobile apps, curl)
-- Blocks all unrecognized origins with descriptive error
-
-### 2. API Base URL – Smart Fallback (Frontend)
-**File:** `frontend/src/utils/env.js`
-
-- Added production-aware fallback using `window.location.origin + "/api"` when `REACT_APP_API_URL` env var is missing
-- Keeps `localhost:5001/api` fallback only during local development
-- Prevents mobile devices from calling `localhost` in production
-
-### 3. Mobile Navbar – Z-Index & Partner With Us (Frontend)
-**File:** `frontend/src/components/Common/Navbar.jsx`
-
-- Raised mobile menu overlay `z-index` from `999` → `9999`
-- Raised logo and hamburger `z-index` from `1001` → `10001`
-- Made "Partner With Us" link visible on mobile (removed `.hide-on-mobile` class)
-
-### 4. Hero Buttons – Mobile Stacking (Frontend)
-**File:** `frontend/src/pages/Landing/Home.jsx`
-
-- Added `hero-btns` className to the CTA button container
-- Added `@media (max-width: 640px)` rule: `flex-direction: column`, `width: 100%`
-- Buttons ("Get Started" + "Book Demo") now stack vertically and fill width on mobile
-
----
-
-## Files Modified
-
-| File | Type | Change |
-|------|------|--------|
-| `Backend/server.js` | Backend | Dynamic CORS origin function |
-| `frontend/src/utils/env.js` | Frontend | Smart API URL fallback |
-| `frontend/src/components/Common/Navbar.jsx` | Frontend | z-index 9999 + Partner visible on mobile |
-| `frontend/src/pages/Landing/Home.jsx` | Frontend | Hero buttons mobile stacking |
-
----
-
-## Testing
-
-- ✅ Frontend compiles with `npm start` (no errors)
-- ✅ HTTP 200 response from `localhost:3000`
-- ⏳ Mobile login test: deploy to production and verify from cellular network
-- ⏳ Mobile navbar: test hamburger menu on mobile after deployment
-
----
-
-## Git Commit Message (Suggested)
-
+# 3. Push the changes to your GitHub 'main' branch
+git push origin main
 ```
-fix: critical mobile deployment issues – CORS, API URL, navbar overlap, hero buttons
+*(Note: If Git asks for credentials or a PAT (Personal Access Token), provide them. If your branch is named `master` instead of `main`, use `git push origin master`)*
 
-- Backend: Dynamic CORS origin allows production domains + localhost dev
-- Frontend: Smart API base URL fallback prevents localhost calls in prod
-- Navbar: z-index 9999, Partner With Us visible on mobile
-- Hero: Buttons stack vertically on mobile (<640px)
+---
+
+## Part 2: Pull and Deploy on the Live VPS Server
+
+Connect to your VPS server via SSH:
+```bash
+ssh root@YOUR_VPS_IP_ADDRESS
 ```
+
+Once logged into the server, run these commands in order:
+
+```bash
+# 1. Navigate to your project directory (adjust the path if it's different)
+cd /var/www/SmartHrms   # OR cd /root/SmartHrms OR /var/www/html/SmartHrms
+
+# 2. Pull the latest code from GitHub
+git pull origin main
+
+# 3. Install/Update Backend Dependencies
+cd Backend
+npm install
+
+# 4. (Optional) Run Database Cleanup
+# CAUTION: This will permanently delete all data except the SuperAdmin!
+# If you want to keep existing users/companies intact, SKIP this command.
+node cleanupDB.js
+
+# 5. Restart the Backend Server using PM2
+pm2 stop smarthrms 2>/dev/null || true
+pm2 start server.js --name smarthrms
+pm2 save
+
+# 6. Install/Update Frontend Dependencies
+cd ../frontend
+npm install
+
+# 7. Build the Frontend React App for Production
+npm run build
+
+# 8. Restart NGINX to ensure the frontend connects properly
+# (Assuming your NGINX config points to the frontend/build folder and proxies /api to port 5001)
+systemctl restart nginx
+```
+
+---
+
+## Verification
+Visit your domain (e.g., `https://smarthrms.cloud`).
+1. The app should load quickly.
+2. If you skipped step #4, your data should be intact.
+3. Open the browser Developer Console (F12) — it should be completely empty (no `console.log` or errors).
+4. Check an employee profile — the profile image should load correctly via the `/uploads` route.

@@ -103,7 +103,7 @@ const Navbar = () => {
             {user ? (
               <>
                 <button onClick={goDashboard} className="mobile-btn dashboard">Dashboard</button>
-                <button onClick={() => { logout(); closeMenu(); }} className="mobile-btn logout">Logout</button>
+                <button onClick={() => { logout('/'); closeMenu(); }} className="mobile-btn logout">Logout</button>
               </>
             ) : (
               <>
@@ -122,7 +122,7 @@ const Navbar = () => {
               <button onClick={goDashboard} className="dashboard-btn">
                 <FaUserCircle />
               </button>
-              <button onClick={logout} className="logout-btn" title="Logout">
+              <button onClick={() => logout('/')} className="logout-btn" title="Logout">
                 <FaTimes />
               </button>
             </div>

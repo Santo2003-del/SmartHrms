@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
+const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const Company = require('../models/Company');
@@ -125,17 +127,26 @@ const superAdminLogin = async (req, res) => {
     const envEmail = process.env.SUPER_ADMIN_EMAIL;
     const envPass = process.env.SUPER_ADMIN_PASSWORD;
 
-    console.log("DEBUG LOGIN:", {
-      receivedEmail: email,
-      envEmail: envEmail,
-      passMatch: String(password) === String(envPass)
-    });
-
     if (!envEmail || !envPass) {
       return res.status(500).json({ message: 'Super Admin not configured on server.' });
     }
 
-    if (String(email || '') !== envEmail || String(password || '') !== envPass) {
+    // ✅ Timing-safe comparison to prevent timing attacks
+    const emailMatch = email && envEmail
+      ? crypto.timingSafeEqual(
+        Buffer.from(String(email).padEnd(256)),
+        Buffer.from(String(envEmail).padEnd(256))
+      )
+      : false;
+
+    const passMatch = password && envPass
+      ? crypto.timingSafeEqual(
+        Buffer.from(String(password).padEnd(256)),
+        Buffer.from(String(envPass).padEnd(256))
+      )
+      : false;
+
+    if (!emailMatch || !passMatch) {
       return res.status(401).json({ message: 'Invalid Super Admin credentials' });
     }
 
@@ -157,10 +168,6 @@ const superAdminLogin = async (req, res) => {
 /* ================= 3) EMPLOYEE REGISTRATION (PUBLIC) ================= */
 const registerEmployee = async (req, res) => {
   try {
-    console.log("INCOMING REGISTRATION DATA:");
-    console.log("Body:", req.body);
-    console.log("File:", req.file);
-
     const { name, email, mobile, password, designation, companyId, faceDescriptor } = req.body || {};
     const e = normalizeEmail(email);
 
@@ -170,6 +177,11 @@ const registerEmployee = async (req, res) => {
 
     if (!name || !e || !password || !companyId) {
       return res.status(400).json({ message: 'Name, email, password, companyId required' });
+    }
+
+    // ✅ Validate ObjectId format to prevent NoSQL injection
+    if (!mongoose.Types.ObjectId.isValid(companyId)) {
+      return res.status(400).json({ message: 'Invalid Company ID format.' });
     }
 
     const company = await Company.findById(companyId);
@@ -209,7 +221,6 @@ const registerEmployee = async (req, res) => {
       userId: user._id
     });
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
     res.status(500).json({ message: 'Server Error during registration' });
   }
 };

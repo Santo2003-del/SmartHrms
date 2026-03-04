@@ -89,7 +89,7 @@ const AdminLogin = () => {
             <label>Official Email</label>
             <div className="hr-input-wrapper">
               <FaEnvelope className="field-icon" />
-              <input type="email" name="email" placeholder="hr@company.com" onChange={handleChange} value={form.email} required />
+              <input type="email" name="email" placeholder="hr@company.com" onChange={handleChange} value={form.email} required autoComplete="username" />
             </div>
           </div>
 
@@ -97,7 +97,7 @@ const AdminLogin = () => {
             <label>Password</label>
             <div className="hr-input-wrapper">
               <FaLock className="field-icon" />
-              <input type="password" name="password" placeholder="••••••••" onChange={handleChange} value={form.password} required />
+              <input type="password" name="password" placeholder="••••••••" onChange={handleChange} value={form.password} required autoComplete="current-password" />
             </div>
           </div>
 

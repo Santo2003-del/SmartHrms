@@ -202,7 +202,7 @@ const approveInquiry = async (req, res) => {
     };
 
     const provisionWithoutTxn = async () => {
-      console.log("APPROVE_INQUIRY: Provisioning WITHOUT transaction...");
+
       const companyDoc = await Company.create(companyPayload);
       ownerPayload.companyId = companyDoc._id;
 
@@ -211,7 +211,7 @@ const approveInquiry = async (req, res) => {
       owner._isPasswordAlreadyHashed = true;
       await owner.save();
 
-      console.log("APPROVE_INQUIRY: Company and Owner created.");
+
       inquiry.status = "Approved";
       inquiry.companyId = companyDoc._id;
       await inquiry.save();
@@ -220,7 +220,7 @@ const approveInquiry = async (req, res) => {
     };
 
     const provisionWithTxn = async () => {
-      console.log("APPROVE_INQUIRY: Starting transaction session...");
+
       const session = await mongoose.startSession();
       session.startTransaction();
 
@@ -239,7 +239,7 @@ const approveInquiry = async (req, res) => {
 
         await session.commitTransaction();
         session.endSession();
-        console.log("APPROVE_INQUIRY: Transaction committed.");
+
         return createdCompany;
       } catch (err) {
         console.error("APPROVE_INQUIRY: Transaction failed, aborting...", err);
@@ -287,7 +287,7 @@ const approveInquiry = async (req, res) => {
         subject: 'Account Approved - GMV Smart HRMS',
         message: approvalMessage
       });
-      console.log("APPROVE_INQUIRY: Approval email sent to", email);
+
     } catch (err) {
       console.error("APPROVE_INQUIRY: Failed to send approval email", err);
     }

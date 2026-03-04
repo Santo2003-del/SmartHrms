@@ -74,6 +74,7 @@ const SuperAdminLogin = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required
+                autoComplete="username"
               />
             </div>
           </div>
@@ -89,6 +90,7 @@ const SuperAdminLogin = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"

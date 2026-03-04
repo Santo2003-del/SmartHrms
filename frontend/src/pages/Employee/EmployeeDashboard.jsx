@@ -38,7 +38,7 @@ const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
 /* =========================
    BACKEND HOST (for images)
 ========================= */
-const DEV_BACKEND_FALLBACK = "http://localhost:5000";
+const DEV_BACKEND_FALLBACK = "http://localhost:5001";
 const ENV_BACKEND = process.env.REACT_APP_SERVER_URL || process.env.REACT_APP_BACKEND_URL || "";
 
 /* =========================
@@ -856,7 +856,7 @@ const EmployeeDashboard = () => {
             <button className="edash-hdr-btn" onClick={() => fetchDashboardData(true)} style={{ opacity: refreshing ? 0.6 : 1 }}>
               <FaRedoAlt /> {refreshing ? "…" : "Refresh"}
             </button>
-            <button className="edash-logout" onClick={logout} title="Logout"><FaSignOutAlt /></button>
+            <button className="edash-logout" onClick={() => logout('/')} title="Logout"><FaSignOutAlt /></button>
           </div>
         </header>
 
@@ -1236,6 +1236,20 @@ const EmployeeDashboard = () => {
           .edash-tables{grid-template-columns:1fr}
           .verifyGrid{grid-template-columns:1fr}
         }
+        @media(max-width:768px){
+          .edash-stats{grid-template-columns:repeat(2,1fr)}
+          .edash-tables{grid-template-columns:1fr}
+          .edash-content{padding:16px}
+          .edash-tbl{min-width:400px}
+          .edash-panel{padding:14px}
+          .locStrip{flex-direction:column;gap:8px}
+          .locPill{min-width:unset}
+          .modalCard.wide{max-width:95vw}
+          .edash-welcome{padding:18px}
+          .edash-wl-meta{gap:10px;font-size:12px}
+          .edash-sc{padding:14px}
+          .edash-sc-val{font-size:22px}
+        }
         @media(max-width:560px){
           .edash-stats{grid-template-columns:1fr}
           .edash-welcome{flex-direction:column;align-items:flex-start}
@@ -1243,7 +1257,30 @@ const EmployeeDashboard = () => {
           .edash-wl-right{width:100%}
           .edash-punch-dual{width:100%}
           .edash-btn-p{width:100%}
-          .edash-content{padding:16px}
+          .edash-content{padding:14px}
+          .edash-hdr-right{flex-wrap:wrap;justify-content:flex-end}
+          .edash-date span{display:none}
+          .edash-hdr-btn{padding:8px 10px;font-size:12px}
+          .edash-pg{flex-direction:column;align-items:center;gap:8px}
+          .edash-pg-info{text-align:center}
+          .edash-btn-g,.edash-btn-d{flex:1;justify-content:center}
+          .modalCard{padding:14px;border-radius:14px}
+        }
+        @media(max-width:400px){
+          .edash-content{padding:10px}
+          .edash-panel{padding:10px}
+          .edash-tbl thead th{padding:8px;font-size:10px}
+          .edash-tbl tbody td{padding:8px;font-size:12px}
+          .edash-tbl{min-width:350px}
+          .edash-welcome{padding:14px}
+          .edash-wl-name{font-size:18px}
+          .edash-wl-avatar{width:56px;height:56px}
+          .edash-sc{padding:10px}
+          .edash-sc-val{font-size:20px}
+          .edash-sc-lbl{font-size:10px}
+          .edash-header{padding:10px 12px}
+          .edash-logout{width:32px;height:32px;font-size:12px}
+          .edash-pg-btn,.edash-pg-num{padding:4px 8px;font-size:11px}
         }
       `}</style>
     </div>

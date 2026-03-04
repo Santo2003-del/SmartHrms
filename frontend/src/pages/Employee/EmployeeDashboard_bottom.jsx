@@ -71,7 +71,7 @@ return (
                     <button className="edash-hdr-btn" onClick={() => fetchDashboardData(true)} style={{ opacity: refreshing ? 0.6 : 1 }}>
                         <FaRedoAlt /> {refreshing ? "…" : "Refresh"}
                     </button>
-                    <button className="edash-logout" onClick={logout} title="Logout"><FaSignOutAlt /></button>
+                    <button className="edash-logout" onClick={() => logout('/')} title="Logout"><FaSignOutAlt /></button>
                 </div>
             </header>
 
@@ -465,4 +465,4 @@ return (
 );
 
 
-export default EmployeeDashboard;v
+export default EmployeeDashboard; v

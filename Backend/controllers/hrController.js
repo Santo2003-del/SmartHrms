@@ -157,7 +157,7 @@ const updateEmployeeDetails = async (req, res) => {
     }
 
     const allowed = ['name', 'email', 'mobile', 'designation', 'department', 'managerId', 'employeeCode', 'basicSalary', 'salary', 'joiningDate'];
-    console.log('updateEmployeeDetails req.body:', req.body); // ✅ DEBUG LOG
+
 
 
     // 1. Generic updates
@@ -178,7 +178,7 @@ const updateEmployeeDetails = async (req, res) => {
 
       user.basicSalary = numVal;
       user.salary = numVal; // Keep legacy field in sync
-      console.log('Salary Updated to:', numVal); // ✅ DEBUG LOG
+
     }
 
     // 3. Joining Date

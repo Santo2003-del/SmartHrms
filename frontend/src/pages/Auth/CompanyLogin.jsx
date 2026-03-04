@@ -74,12 +74,12 @@ const CompanyLogin = () => {
         <form onSubmit={handleLogin} className="company-form">
           <div className="company-input">
             <FaEnvelope className="field-icon" />
-            <input type="email" name="email" placeholder="Owner email address" onChange={handleChange} value={form.email} required />
+            <input type="email" name="email" placeholder="Owner email address" onChange={handleChange} value={form.email} required autoComplete="username" />
           </div>
 
           <div className="company-input">
             <FaLock className="field-icon" />
-            <input type="password" name="password" placeholder="Password" onChange={handleChange} value={form.password} required />
+            <input type="password" name="password" placeholder="Password" onChange={handleChange} value={form.password} required autoComplete="current-password" />
           </div>
 
           <button className="company-btn" disabled={loading}>
