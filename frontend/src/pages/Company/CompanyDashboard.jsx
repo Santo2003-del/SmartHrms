@@ -81,6 +81,23 @@ const CompanyDashboard = () => {
     requireFace: true,
   });
 
+  // Salary Slip Customization State
+  const [slipSettings, setSlipSettings] = useState({
+    companyName: "",
+    address: "",
+    cin: "",
+    gstin: "",
+    signatoryName: "Authorized Signatory",
+    signatoryTitle: "",
+    includePf: true,
+    includePt: true,
+    includeTds: false,
+    signature: "",
+  });
+  const [signaturePreview, setSignaturePreview] = useState(null);
+  const [signatureFile, setSignatureFile] = useState(null);
+  const [savingSlipSettings, setSavingSlipSettings] = useState(false);
+
 
 
   const safeLogout = useCallback(
@@ -140,6 +157,24 @@ const CompanyDashboard = () => {
         timeZone: office.timeZone || prev.timeZone,
         requireFace: isFaceReq,
       }));
+
+      const slp = c.salarySlipSettings || {};
+      setSlipSettings({
+        companyName: slp.companyName || c.name || "",
+        address: slp.address || loc.address || "",
+        cin: slp.cin || "",
+        gstin: slp.gstin || "",
+        signatoryName: slp.signatoryName || "Authorized Signatory",
+        signatoryTitle: slp.signatoryTitle || c.name || "",
+        includePf: slp.includePf !== false,
+        includePt: slp.includePt !== false,
+        includeTds: !!slp.includeTds,
+        signature: slp.signature || "",
+      });
+      if (slp.signature) {
+        const base = API?.defaults?.baseURL?.replace(/\/api\/?$/i, "") || "http://localhost:5000";
+        setSignaturePreview(slp.signature.startsWith("http") ? slp.signature : `${base}/${slp.signature.replace(/^\/+/, "")}`);
+      }
     } catch (err) {
       const code = err?.response?.status;
       if (code === 401)
@@ -261,6 +296,38 @@ const CompanyDashboard = () => {
       }
     } finally {
       setSavingSettings(false);
+    }
+  };
+
+  const handleSignatureChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSignatureFile(file);
+    setSignaturePreview(URL.createObjectURL(file));
+  };
+
+  const handleSaveSlipSettings = async (e) => {
+    e.preventDefault();
+    if (savingSlipSettings) return;
+
+    try {
+      setSavingSlipSettings(true);
+      const fd = new FormData();
+      fd.append("salarySlipSettings", JSON.stringify(slipSettings));
+      if (signatureFile) {
+        fd.append("signature", signatureFile);
+      }
+
+      await API.put("/company/update", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Salary Slip & Branding settings saved ✅");
+      loadData();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to save salary slip settings");
+    } finally {
+      setSavingSlipSettings(false);
     }
   };
 
@@ -689,6 +756,149 @@ const CompanyDashboard = () => {
 
                 <button type="submit" className="saveBtn" disabled={savingSettings} style={{ marginTop: '10px' }}>
                   {savingSettings ? "Saving..." : "Save Changes"} <FaSave />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* --- SALARY SLIP & BRANDING CUSTOMIZATION --- */}
+          <div className="settingsCard" id="salary-slip-settings" style={{ marginTop: '24px' }}>
+            <div className="settingsHead">
+              <div className="shLeft">
+                <div className="shIcon" style={{ background: '#eff6ff', color: '#2563eb' }}>
+                  <FaBuilding />
+                </div>
+                <div>
+                  <h3>Salary Slip & Branding Customization</h3>
+                  <p>Customize company header, CIN/GSTIN, logo, and authorized signature for generated salary slips</p>
+                </div>
+              </div>
+              <button className="ghost-btn" onClick={loadData}>
+                <FaSync />
+              </button>
+            </div>
+
+            <form className="settingsForm" onSubmit={handleSaveSlipSettings}>
+              <div className="formGrid">
+                <div className="fg">
+                  <label>
+                    <FaBuilding /> Company Name on Slip
+                  </label>
+                  <input
+                    value={slipSettings.companyName}
+                    onChange={(e) =>
+                      setSlipSettings((p) => ({ ...p, companyName: e.target.value }))
+                    }
+                    placeholder="e.g. Triblock Technology Pvt. Ltd."
+                  />
+                  <small className="hint">Defaults to your registered company name</small>
+                </div>
+
+                <div className="fg">
+                  <label>
+                    <FaMapMarkerAlt /> Registered Office Address
+                  </label>
+                  <input
+                    value={slipSettings.address}
+                    onChange={(e) =>
+                      setSlipSettings((p) => ({ ...p, address: e.target.value }))
+                    }
+                    placeholder="e.g. Magarpatta City, Hadapsar, Pune - 411028, Maharashtra, India"
+                  />
+                </div>
+
+                <div className="fg">
+                  <label>Corporate Identification No. (CIN)</label>
+                  <input
+                    value={slipSettings.cin}
+                    onChange={(e) =>
+                      setSlipSettings((p) => ({ ...p, cin: e.target.value }))
+                    }
+                    placeholder="e.g. U72900PN2024PTC215678"
+                  />
+                </div>
+
+                <div className="fg">
+                  <label>GSTIN Number</label>
+                  <input
+                    value={slipSettings.gstin}
+                    onChange={(e) =>
+                      setSlipSettings((p) => ({ ...p, gstin: e.target.value }))
+                    }
+                    placeholder="e.g. 27AABCT1234F1Z5"
+                  />
+                </div>
+
+                <div className="fg">
+                  <label>Signatory Designation / Label</label>
+                  <input
+                    value={slipSettings.signatoryName}
+                    onChange={(e) =>
+                      setSlipSettings((p) => ({ ...p, signatoryName: e.target.value }))
+                    }
+                    placeholder="Authorized Signatory"
+                  />
+                </div>
+
+                <div className="fg">
+                  <label>Upload Authorized Signature Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSignatureChange}
+                    style={{ padding: '6px' }}
+                  />
+                  {signaturePreview && (
+                    <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img
+                        src={signaturePreview}
+                        alt="Signature preview"
+                        style={{ height: '40px', maxWidth: '140px', objectFit: 'contain', border: '1px dashed #cbd5e1', borderRadius: '4px', background: '#fff', padding: '2px' }}
+                      />
+                      <small style={{ color: '#10b981', fontWeight: 600 }}>Active Signature</small>
+                    </div>
+                  )}
+                </div>
+
+                <div className="fg full" style={{ marginTop: '10px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', display: 'block' }}>
+                    Salary Breakdown Components
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <input
+                        type="checkbox"
+                        checked={slipSettings.includePf}
+                        onChange={(e) => setSlipSettings(p => ({ ...p, includePf: e.target.checked }))}
+                        style={{ width: '16px', height: '16px', accentColor: '#2563eb' }}
+                      />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>Provident Fund (PF - ₹1,800)</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <input
+                        type="checkbox"
+                        checked={slipSettings.includePt}
+                        onChange={(e) => setSlipSettings(p => ({ ...p, includePt: e.target.checked }))}
+                        style={{ width: '16px', height: '16px', accentColor: '#2563eb' }}
+                      />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>Professional Tax (PT - ₹200)</span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <input
+                        type="checkbox"
+                        checked={slipSettings.includeTds}
+                        onChange={(e) => setSlipSettings(p => ({ ...p, includeTds: e.target.checked }))}
+                        style={{ width: '16px', height: '16px', accentColor: '#2563eb' }}
+                      />
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b' }}>Income Tax (TDS Deduction)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button type="submit" className="saveBtn" disabled={savingSlipSettings} style={{ marginTop: '12px' }}>
+                  {savingSlipSettings ? "Saving..." : "Save Salary Slip Customization"} <FaSave />
                 </button>
               </div>
             </form>

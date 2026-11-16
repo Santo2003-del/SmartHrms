@@ -22,7 +22,15 @@ router.get('/hrs', companyOwnerOnly, controller.getCompanyHRs);
 router.post('/register-hr', companyOwnerOnly, controller.registerHR);
 router.post('/request-limit', companyOwnerOnly, controller.requestHrLimit);
 router.post('/expenses', companyOwnerOnly, controller.addExpense); // ✅ Add custom expense
-router.put('/update', companyOwnerOnly, uploadImage.single('logo'), controller.updateCompanyProfile);
+router.put(
+  '/update',
+  companyOwnerOnly,
+  uploadImage.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'signature', maxCount: 1 }
+  ]),
+  controller.updateCompanyProfile
+);
 
 /* =========================================================================
    2. EMPLOYEE MANAGEMENT ROUTES (HR & Owner)

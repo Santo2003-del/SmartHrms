@@ -140,15 +140,35 @@ const updateCompanyProfile = async (req, res) => {
 
     const updates = { ...(req.body || {}) };
 
-    // ✅ file upload (logo)
+    // ✅ file upload (logo & signature)
     if (req.file) {
       updates.logo = `uploads/images/${req.file.filename}`;
+    }
+    if (req.files) {
+      if (req.files.logo && req.files.logo[0]) {
+        updates.logo = `uploads/images/${req.files.logo[0].filename}`;
+      }
+      if (req.files.signature && req.files.signature[0]) {
+        if (!updates.salarySlipSettings || typeof updates.salarySlipSettings !== 'object') {
+          updates.salarySlipSettings = typeof updates.salarySlipSettings === 'string'
+            ? safeJsonParse(updates.salarySlipSettings, {})
+            : {};
+        }
+        updates.salarySlipSettings.signature = `uploads/images/${req.files.signature[0].filename}`;
+      }
     }
 
     // ✅ parse nested fields (when sent via FormData)
     if (typeof updates.location === 'string') updates.location = safeJsonParse(updates.location, {});
     if (typeof updates.officeTiming === 'string') updates.officeTiming = safeJsonParse(updates.officeTiming, {});
     if (typeof updates.attendancePolicy === 'string') updates.attendancePolicy = safeJsonParse(updates.attendancePolicy, {});
+    if (typeof updates.salarySlipSettings === 'string') updates.salarySlipSettings = safeJsonParse(updates.salarySlipSettings, {});
+
+    if (updates.salarySlipSettings && typeof updates.salarySlipSettings === 'object') {
+      if (updates.logo && !updates.salarySlipSettings.logo) {
+        updates.salarySlipSettings.logo = updates.logo;
+      }
+    }
 
     // 🔒 Security: block fields (SuperAdmin only)
     delete updates.status;

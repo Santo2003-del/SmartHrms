@@ -45,6 +45,22 @@ const CompanySchema = new mongoose.Schema(
 
     attendancePolicy: { type: AttendancePolicySchema, default: () => ({}) },
 
+    // Salary slip template & branding customization
+    salarySlipSettings: {
+      companyName: { type: String, default: '' },
+      address: { type: String, default: '' },
+      cin: { type: String, default: '' },
+      gstin: { type: String, default: '' },
+      logo: { type: String, default: '' },
+      signature: { type: String, default: '' },
+      signatoryName: { type: String, default: 'Authorized Signatory' },
+      signatoryTitle: { type: String, default: '' },
+      includePf: { type: Boolean, default: true },
+      includePt: { type: Boolean, default: true },
+      includeTds: { type: Boolean, default: false },
+      note: { type: String, default: '' }
+    },
+
     maxHrAdmins: { type: Number, default: 1 },
     hrLimitRequest: { type: String, enum: ['None', 'Pending', 'Approved'], default: 'None' },
 
