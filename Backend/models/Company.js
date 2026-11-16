@@ -7,15 +7,20 @@ const AttendancePolicySchema = new mongoose.Schema(
 
     allowedMethods: {
       type: [String],
-      default: ['GPS_FACE', 'MANUAL_HR'],
-      enum: ['GPS_FACE', 'FACE_ONLY', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR']
+      default: ['FACE_ONLY', 'MANUAL_HR'],
+      enum: ['GPS_FACE', 'FACE_ONLY', 'MANUAL_PUNCH', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR']
     },
 
     // optional future
     qrSecret: { type: String, default: '' },
     allowedWifiSSIDs: { type: [String], default: [] },
     allowedIpRanges: { type: [String], default: [] },
-    requireDeviceBinding: { type: Boolean, default: false }
+    requireDeviceBinding: { type: Boolean, default: false },
+
+    // new attendance settings
+    expectedWorkHours: { type: Number, default: 8 },
+    minimumHalfDayHours: { type: Number, default: 4 },
+    minimumFullDayHours: { type: Number, default: 8 }
   },
   { _id: false }
 );
@@ -27,12 +32,7 @@ const CompanySchema = new mongoose.Schema(
     logo: { type: String, default: "" },
 
     location: {
-      address: { type: String, default: '' },
-      lat: { type: Number, default: null },
-      lng: { type: Number, default: null },
-
-      // dynamic (from Inquiry/superadmin)
-      radius: { type: Number, default: 3000 } // meters
+      address: { type: String, default: '' }
     },
 
     // office timing + timezone
@@ -48,7 +48,15 @@ const CompanySchema = new mongoose.Schema(
     maxHrAdmins: { type: Number, default: 1 },
     hrLimitRequest: { type: String, enum: ['None', 'Pending', 'Approved'], default: 'None' },
 
-    status: { type: String, enum: ['Active', 'Inactive'], default: 'Active', index: true }
+    status: { type: String, enum: ['Active', 'Inactive', 'Suspended', 'Expired'], default: 'Active', index: true },
+
+    // Subscriptions
+    subscriptionPlan: { type: String, default: 'Free Trial' }, // Free Trial, Quarterly Plan, Annual Plan
+    subscriptionStatus: { type: String, enum: ['Active', 'Expired', 'Suspended'], default: 'Active' },
+    subscriptionStart: { type: Date, default: Date.now },
+    subscriptionExpiry: { type: Date },
+    enabledFeatures: { type: [String], default: [] },
+    paymentStatus: { type: String, enum: ['Pending', 'Verified', 'None'], default: 'None' }
   },
   { timestamps: true }
 );

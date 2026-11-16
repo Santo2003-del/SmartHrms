@@ -830,7 +830,11 @@
     color: var(--cd-text-muted);
 }
 
-/* Responsive */
+/* ==============================
+   RESPONSIVE BREAKPOINTS
+   ============================== */
+
+/* Tablet / Small Laptop */
 @media (max-width: 900px) {
     .hero {
         grid-template-columns: 1fr;
@@ -841,6 +845,162 @@
     }
 
     .expGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .quickGrid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+/* Tablet Portrait */
+@media (max-width: 768px) {
+    .cd-nav {
+        height: auto;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .cd-wrap {
+        padding: 20px 16px;
+    }
+
+    .hero-left {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .hero-meta-grid {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .meta-item {
+        justify-content: center;
+    }
+
+    .expGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .settingsForm .formGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .fg.full {
+        grid-column: span 1;
+    }
+
+    .saveBtn {
+        grid-column: span 1;
+    }
+
+    .settingsHead {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .sh-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .modal-box {
+        padding: 20px;
+        max-width: 95vw;
+    }
+
+    .modal-foot {
+        flex-direction: column;
+    }
+
+    .expTable th,
+    .expTable td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .cd-wrap {
+        padding: 12px 10px;
+    }
+
+    .cd-nav {
+        padding: 10px 12px;
+    }
+
+    .brand-txt h1 {
+        font-size: 0.95rem;
+    }
+
+    .nav-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .ghost-btn,
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 0.82rem;
+    }
+
+    .hero-left,
+    .hero-right {
+        padding: 16px;
+    }
+
+    .heroInfo h2 {
+        font-size: 1.2rem;
+    }
+
+    .logo {
+        width: 72px;
+        height: 72px;
+    }
+
+    .qCard {
+        padding: 14px;
+    }
+
+    .qGo {
+        display: none;
+    }
+
+    .expCard {
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .statCard {
+        padding: 14px;
+    }
+
+    .settingsCard {
+        padding: 16px;
+    }
+
+    .modal-box {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .addExpBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .limitTitle {
+        font-size: 0.9rem;
+    }
+
+    .limitNum strong {
+        font-size: 1.2rem;
     }
 }

@@ -18,7 +18,9 @@ import {
   FaBriefcase,
   FaEnvelope,
   FaPhone,
-  FaImage
+  FaImage,
+  FaEye,
+  FaEyeSlash
 } from "react-icons/fa";
 import { readEnv } from "../../utils/env";
 
@@ -39,6 +41,7 @@ const Register = () => {
   const [companiesLoading, setCompaniesLoading] = useState(true);
 
   const [profileImage, setProfileImage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [modelLoading, setModelLoading] = useState(true);
@@ -383,9 +386,38 @@ const Register = () => {
 
                 <div className="field-group" style={{ marginBottom: '18px' }}>
                   <label>Password <span className="req">*</span></label>
-                  <div className="input-wrap">
+                  <div className="input-wrap" style={{ position: "relative" }}>
                     <FaLock className="field-icon" />
-                    <input type="password" placeholder="••••••••" value={formData.password} onChange={e => setField("password", e.target.value)} required />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={e => setField("password", e.target.value)}
+                      required
+                      style={{ paddingRight: "44px" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "14px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "transparent",
+                        border: "none",
+                        color: "#94a3b8",
+                        cursor: "pointer",
+                        padding: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1rem"
+                      }}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
                   </div>
                 </div>
 

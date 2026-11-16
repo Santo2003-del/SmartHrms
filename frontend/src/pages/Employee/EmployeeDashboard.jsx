@@ -27,13 +27,9 @@ import {
   FaLayerGroup,
   FaChevronLeft,
   FaChevronRight,
+  FaCamera,
 } from "react-icons/fa";
-import { GoogleMap, useJsApiLoader, Marker, Circle } from "@react-google-maps/api";
-
-/* =========================
-   GOOGLE MAPS KEY (CRA .env)
-========================= */
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_KEY || "";
+// Map removed
 
 /* =========================
    BACKEND HOST (for images)
@@ -118,105 +114,15 @@ const getImageUrl = (imgPath) => {
 };
 
 /* =========================
-   GEO HELPERS
+   GEO HELPERS (Disabled - No Google Maps)
 ========================= */
-const haversineMeters = (a, b) => {
-  if (!a || !b) return null;
-  const lat1 = Number(a.lat);
-  const lon1 = Number(a.lng);
-  const lat2 = Number(b.lat);
-  const lon2 = Number(b.lng);
-  if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return null;
-
-  const R = 6371e3;
-  const φ1 = (lat1 * Math.PI) / 180;
-  const φ2 = (lat2 * Math.PI) / 180;
-  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
-  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
-
-  const x =
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-
-  return R * (2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x)));
-};
-
-const computeDistanceMeters = (a, b) => {
-  try {
-    if (
-      typeof window !== "undefined" &&
-      window.google?.maps?.geometry?.spherical &&
-      a?.lat != null &&
-      a?.lng != null &&
-      b?.lat != null &&
-      b?.lng != null
-    ) {
-      const p1 = new window.google.maps.LatLng(Number(a.lat), Number(a.lng));
-      const p2 = new window.google.maps.LatLng(Number(b.lat), Number(b.lng));
-      const d = window.google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
-      return Number.isFinite(d) ? d : null;
-    }
-  } catch (e) { }
-  return haversineMeters(a, b);
-};
+const haversineMeters = () => 0;
+const computeDistanceMeters = () => 0;
 
 /* =========================
-   ACCURATE GPS
+   ACCURATE GPS (Disabled)
 ========================= */
-const getAccuratePosition = ({
-  desiredAccuracy = 60,
-  maxWaitMs = 25000,
-  enableHighAccuracy = true,
-} = {}) => {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
-
-    const opts = { enableHighAccuracy, timeout: 15000, maximumAge: 0 };
-    let best = null;
-    let watchId = null;
-    let done = false;
-
-    const finish = (pos, isTimeout = false) => {
-      if (done) return;
-      done = true;
-      if (watchId != null) navigator.geolocation.clearWatch(watchId);
-      if (isTimeout && best) return resolve(best);
-      resolve(pos);
-    };
-
-    const fail = (err) => {
-      if (done) return;
-      done = true;
-      if (watchId != null) navigator.geolocation.clearWatch(watchId);
-      reject(err);
-    };
-
-    const consider = (pos) => {
-      const acc = Number(pos?.coords?.accuracy);
-      if (!best || (Number.isFinite(acc) && acc < Number(best.coords.accuracy))) best = pos;
-      if (Number.isFinite(acc) && acc <= desiredAccuracy) finish(pos);
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        consider(pos);
-
-        const acc = Number(pos?.coords?.accuracy);
-        if (Number.isFinite(acc) && acc <= desiredAccuracy) return;
-
-        watchId = navigator.geolocation.watchPosition(
-          (p) => consider(p),
-          (e) => (best ? finish(best, true) : fail(e)),
-          { enableHighAccuracy, maximumAge: 0, timeout: 20000 }
-        );
-
-        setTimeout(() => finish(best || pos, true), maxWaitMs);
-      },
-      (err) => fail(err),
-      opts
-    );
-  });
-};
+const getAccuratePosition = () => Promise.resolve({ coords: { latitude: 0, longitude: 0, accuracy: 0 } });
 
 /* =========================
    DATA NORMALIZERS
@@ -288,55 +194,7 @@ const normalizeProfile = (u) => {
   };
 };
 
-/* =========================
-   Lazy Map Loader (only when modal opens)
-========================= */
-const VerifyMap = React.memo(function VerifyMap({ apiKey, currentPos, officePos, circleOptions }) {
-  const libraries = useMemo(() => ["places", "geometry"], []);
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: apiKey || "",
-    libraries,
-  });
-
-  const mapBlocked = !apiKey || !!loadError;
-
-  if (mapBlocked) {
-    return (
-      <div className="warnBox">
-        Google Map not available. Check:
-        <br />• REACT_APP_GOOGLE_MAPS_KEY in .env
-        <br />• Maps JavaScript API enabled
-        <br />• Billing enabled on GCP
-      </div>
-    );
-  }
-
-  if (!isLoaded) return <div className="mapFallback">Loading map…</div>;
-
-  return (
-    <GoogleMap
-      mapContainerStyle={mapContainerStyle}
-      center={currentPos || officePos || { lat: 20.5937, lng: 78.9629 }}
-      zoom={currentPos || officePos ? 16 : 5}
-      options={{
-        streetViewControl: false,
-        fullscreenControl: false,
-        mapTypeControl: false,
-        clickableIcons: false,
-      }}
-    >
-      {officePos && (
-        <>
-          <Marker position={officePos} />
-          <Circle center={officePos} options={circleOptions} />
-        </>
-      )}
-      {currentPos && <Marker position={{ lat: currentPos.lat, lng: currentPos.lng }} />}
-    </GoogleMap>
-  );
-});
+const VerifyMap = () => null;
 
 const NAV_ITEMS = [
   { label: "Dashboard", path: "/employee/dashboard", icon: <FaThLarge /> },
@@ -423,9 +281,19 @@ const EmployeeDashboard = () => {
     return Math.min(Math.max(r, 50), 5000);
   }, [profile?.companyId?.location?.radius, profile?.companyId?.radius, profile?.companyId?.attendanceRadius]);
 
+  const isFaceRequired = useMemo(() => {
+    const policy = profile?.companyId?.attendancePolicy;
+    if (!policy) return true;
+    if (policy.requireFace === false) return false;
+    if (policy.method === "MANUAL_PUNCH") return false;
+    if (Array.isArray(policy.allowedMethods) && policy.allowedMethods.includes("MANUAL_PUNCH") && !policy.requireFace) return false;
+    return true;
+  }, [profile?.companyId?.attendancePolicy]);
+
   const attendanceMethod = useMemo(() => {
-    return profile?.companyId?.attendanceMethod || profile?.companyId?.attendancePolicy?.method || "GPS_FACE";
-  }, [profile?.companyId?.attendanceMethod, profile?.companyId?.attendancePolicy?.method]);
+    if (!isFaceRequired) return "MANUAL_PUNCH";
+    return profile?.companyId?.attendanceMethod || profile?.companyId?.attendancePolicy?.method || "FACE_ONLY";
+  }, [isFaceRequired, profile?.companyId?.attendanceMethod, profile?.companyId?.attendancePolicy?.method]);
 
   const circleOptions = useMemo(() => {
     return {
@@ -609,13 +477,47 @@ const EmployeeDashboard = () => {
   /* =========================
      PUNCH FLOW
   ========================= */
+  const [submittingPunch, setSubmittingPunch] = useState(false);
+
   const handlePunchInit = (type) => {
     setActionType(type);
     setReportText("");
     setShowTextModal(true);
   };
 
-  const proceedToVerification = () => {
+  const proceedToVerification = async () => {
+    if (!reportText.trim()) {
+      return toast.warning(actionType === "in" ? "Please enter your morning tasks/plan" : "Please enter your today's work summary");
+    }
+
+    // If company allows manual attendance without face scan
+    if (!isFaceRequired) {
+      try {
+        setSubmittingPunch(true);
+        const payload = {
+          method: "MANUAL_PUNCH",
+          attendanceMethod: "MANUAL_PUNCH",
+          morningReport: actionType === "in" ? reportText : undefined,
+          dailyReport: actionType === "out" ? reportText : undefined,
+          plannedTasks: actionType === "in" ? reportText : undefined,
+        };
+
+        const endpoint = actionType === "in" ? "/attendance/punch-in" : "/attendance/punch-out";
+        await API.post(endpoint, payload);
+
+        toast.success(actionType === "in" ? "Attendance Marked Successfully (Manual) ✅" : "Logged Out Successfully 🏠");
+        setShowTextModal(false);
+        fetchDashboardData(true);
+        fetchMe();
+      } catch (err) {
+        toast.error(err?.response?.data?.message || "Punch failed!");
+      } finally {
+        setSubmittingPunch(false);
+      }
+      return;
+    }
+
+    // If face recognition is mandatory
     setShowTextModal(false);
     setShowPunchModal(true);
 
@@ -625,85 +527,27 @@ const EmployeeDashboard = () => {
     setDistanceMeters(null);
     setIsInsideRadius(true);
 
-    fetchLocation(); // try, but not mandatory
+    fetchLocation();
   };
 
   const fetchLocation = async () => {
-    setIsLocating(true);
-    setIsGpsLocked(false);
-    setCurrentPos(null);
-    setGpsAccuracy(null);
-    setDistanceMeters(null);
+    setIsGpsLocked(true);
+    setCurrentPos({ lat: 0, lng: 0, accuracy: 0 });
+    setGpsAccuracy(0);
+    setDistanceMeters(0);
     setIsInsideRadius(true);
-
-    if (!navigator.geolocation) {
-      setIsLocating(false);
-      return;
-    }
-
-    if (!GOOGLE_MAPS_API_KEY) {
-      // no toast spam, just once
-    }
-
-    try {
-      if (watchToastRef.current) toast.dismiss(watchToastRef.current);
-      watchToastRef.current = toast.info("📍 Getting accurate location…", { autoClose: 2000 });
-
-      const pos = await getAccuratePosition({
-        desiredAccuracy: 60,
-        maxWaitMs: 25000,
-        enableHighAccuracy: true,
-      });
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const accuracy = Number(pos.coords.accuracy);
-
-      setCurrentPos({ lat, lng, accuracy });
-      setGpsAccuracy(Number.isFinite(accuracy) ? accuracy : null);
-      setIsGpsLocked(true);
-
-      toast.success(`Location Locked ✅ (±${Number.isFinite(accuracy) ? Math.round(accuracy) : "?"}m)`);
-    } catch (err) {
-      // location optional — no hard block
-      console.error(err);
-      toast.info("Location not available — continuing without GPS.");
-    } finally {
-      setIsLocating(false);
-    }
+    setIsLocating(false);
   };
 
   const onFaceVerified = async (faceData) => {
-    const locationOk =
-      isGpsLocked &&
-      currentPos &&
-      Number.isFinite(Number(currentPos.lat)) &&
-      Number.isFinite(Number(currentPos.lng));
-
-    if (officePos && locationOk && distanceMeters != null && distanceMeters > radiusMeters) {
-      return toast.error(`❌ You are outside office radius (${radiusMeters}m). Attendance blocked.`);
-    }
-
     try {
       const payload = {
         faceDescriptor: JSON.stringify(faceData?.descriptor || []),
         faceDescriptorArray: faceData?.descriptor || [],
         image: faceData?.image,
 
-        attendanceMethod,
-        method: attendanceMethod,
-
-        // location optional
-        ...(locationOk
-          ? {
-            location: {
-              lat: currentPos.lat,
-              lng: currentPos.lng,
-              accuracy: currentPos.accuracy ?? gpsAccuracy ?? null,
-              capturedAt: new Date().toISOString(),
-            },
-          }
-          : {}),
+        attendanceMethod: "FACE_ONLY",
+        method: "FACE_ONLY",
 
         morningReport: actionType === "in" ? reportText : undefined,
         dailyReport: actionType === "out" ? reportText : undefined,
@@ -856,7 +700,7 @@ const EmployeeDashboard = () => {
             <button className="edash-hdr-btn" onClick={() => fetchDashboardData(true)} style={{ opacity: refreshing ? 0.6 : 1 }}>
               <FaRedoAlt /> {refreshing ? "…" : "Refresh"}
             </button>
-            <button className="edash-logout" onClick={logout} title="Logout"><FaSignOutAlt /></button>
+            <button className="edash-logout" onClick={() => logout('/')} title="Logout"><FaSignOutAlt /></button>
           </div>
         </header>
 
@@ -875,15 +719,29 @@ const EmployeeDashboard = () => {
                 <div className="edash-wl-name">{profile?.name || user.name}</div>
                 <div className="edash-wl-meta">
                   <span><b>{companyName}</b></span>
-                  <span>Method: <b>{attendanceMethod}</b></span>
+                  <span style={{
+                    background: isFaceRequired ? '#dbeafe' : '#dcfce7',
+                    color: isFaceRequired ? '#1e40af' : '#166534',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    fontWeight: 600,
+                    fontSize: '11px'
+                  }}>
+                    {isFaceRequired ? "Face Scan Required" : "Manual Attendance Allowed"}
+                  </span>
                   <span>TZ: <b>{tz}</b></span>
-                  <span>Radius: <b>{radiusMeters}m</b></span>
                 </div>
               </div>
             </div>
             <div className="edash-wl-right">
               {todayStatus === "Not Started" ? (
-                <button className="edash-btn-p edash-pulse" onClick={() => handlePunchInit("in")}><FaPlay /> Start Shift</button>
+                <button
+                  className="edash-btn-p edash-pulse"
+                  onClick={() => handlePunchInit("in")}
+                  style={{ background: !isFaceRequired ? '#10b981' : undefined }}
+                >
+                  <FaPlay /> {isFaceRequired ? "Start Shift (Face Scan)" : "Start Shift (Manual)"}
+                </button>
               ) : todayStatus === "Completed" ? (
                 <div className="edash-done"><FaCheckCircle /> Shift Completed</div>
               ) : (
@@ -1041,11 +899,44 @@ const EmployeeDashboard = () => {
         <div className="modalOverlay">
           <div className="modalCard">
             <div className="modalHead">
-              <div className="modalTitle">{actionType === "in" ? "Morning Report" : "Daily Report"}</div>
+              <div className="modalTitle">
+                {actionType === "in"
+                  ? (isFaceRequired ? "Punch In — Morning Tasks" : "Manual Attendance — Today's Work Plan")
+                  : (isFaceRequired ? "Punch Out — Daily Summary" : "Manual Punch Out — Work Summary")}
+              </div>
               <button className="iconBtn" onClick={() => setShowTextModal(false)}><FaTimes /></button>
             </div>
-            <textarea className="modalText" placeholder={actionType === "in" ? "Today's plan / tasks..." : "Today's work summary..."} value={reportText} onChange={(e) => setReportText(e.target.value)} />
-            <button className="edash-btn-p" onClick={proceedToVerification}>Proceed <FaArrowRight /></button>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 12px 0' }}>
+              {isFaceRequired
+                ? "Enter your tasks, then verify face on camera to mark attendance."
+                : "Enter your today's work summary. Face scan is NOT required by your company."}
+            </p>
+            <textarea
+              className="modalText"
+              placeholder={actionType === "in" ? "What are you working on today? (e.g. Completed client onboarding, fixing login bug...)" : "Summary of completed work today..."}
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+            />
+            <button
+              className="edash-btn-p"
+              onClick={proceedToVerification}
+              disabled={submittingPunch}
+              style={{
+                background: !isFaceRequired ? '#10b981' : '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              {submittingPunch ? (
+                "Submitting..."
+              ) : isFaceRequired ? (
+                <>Proceed to Face Scan <FaCamera /></>
+              ) : (
+                <>Submit & Mark Attendance <FaCheckCircle /></>
+              )}
+            </button>
           </div>
         </div>
       )}
@@ -1057,25 +948,10 @@ const EmployeeDashboard = () => {
               <div className="modalTitle">Verification</div>
               <button className="iconBtn" onClick={() => setShowPunchModal(false)}><FaTimes /></button>
             </div>
-            <div className="locStrip">
-              <div className={`locPill ${officePos && distanceMeters != null && !isInsideRadius ? "bad" : "ok"}`}>
-                <FaMapMarkerAlt />
-                <span>{officePos ? `Distance: ${distanceLabel(distanceMeters)} (Limit: ${radiusMeters}m)` : "Office location not configured (Admin must set office lat/lng)."}</span>
-              </div>
-              <div className="locMeta">
-                <span>Accuracy: {gpsAccuracy != null ? `±${Math.round(gpsAccuracy)}m` : "--"}</span>
-                <button className="edash-mini" onClick={fetchLocation} type="button"><FaRedoAlt /> Refresh</button>
-              </div>
-            </div>
-            <div className="verifyGrid">
-              <div className="mapBox">
-                <VerifyMap apiKey={GOOGLE_MAPS_API_KEY} currentPos={currentPos} officePos={officePos} circleOptions={circleOptions} />
-                {isLocating && (<div className="gpsOverlay"><FaSpinner className="spin" /> Detecting Location…</div>)}
-              </div>
+            <div className="verifyGrid" style={{ gridTemplateColumns: '1fr' }}>
               <div className="faceBox">
-                <div className={`faceWrap ${officePos && distanceMeters != null && !isInsideRadius ? "blocked" : ""}`}>
+                <div className="faceWrap">
                   <FaceCapture onCapture={onFaceVerified} btnText="Verify & Punch" />
-                  {officePos && distanceMeters != null && !isInsideRadius && (<div className="blockOverlay">❌ You are outside office radius. Move closer and refresh location.</div>)}
                 </div>
                 <div className="smallHint">Tip: Good light + face centered = fast verification ✅</div>
               </div>
@@ -1236,6 +1112,20 @@ const EmployeeDashboard = () => {
           .edash-tables{grid-template-columns:1fr}
           .verifyGrid{grid-template-columns:1fr}
         }
+        @media(max-width:768px){
+          .edash-stats{grid-template-columns:repeat(2,1fr)}
+          .edash-tables{grid-template-columns:1fr}
+          .edash-content{padding:16px}
+          .edash-tbl{min-width:400px}
+          .edash-panel{padding:14px}
+          .locStrip{flex-direction:column;gap:8px}
+          .locPill{min-width:unset}
+          .modalCard.wide{max-width:95vw}
+          .edash-welcome{padding:18px}
+          .edash-wl-meta{gap:10px;font-size:12px}
+          .edash-sc{padding:14px}
+          .edash-sc-val{font-size:22px}
+        }
         @media(max-width:560px){
           .edash-stats{grid-template-columns:1fr}
           .edash-welcome{flex-direction:column;align-items:flex-start}
@@ -1243,7 +1133,30 @@ const EmployeeDashboard = () => {
           .edash-wl-right{width:100%}
           .edash-punch-dual{width:100%}
           .edash-btn-p{width:100%}
-          .edash-content{padding:16px}
+          .edash-content{padding:14px}
+          .edash-hdr-right{flex-wrap:wrap;justify-content:flex-end}
+          .edash-date span{display:none}
+          .edash-hdr-btn{padding:8px 10px;font-size:12px}
+          .edash-pg{flex-direction:column;align-items:center;gap:8px}
+          .edash-pg-info{text-align:center}
+          .edash-btn-g,.edash-btn-d{flex:1;justify-content:center}
+          .modalCard{padding:14px;border-radius:14px}
+        }
+        @media(max-width:400px){
+          .edash-content{padding:10px}
+          .edash-panel{padding:10px}
+          .edash-tbl thead th{padding:8px;font-size:10px}
+          .edash-tbl tbody td{padding:8px;font-size:12px}
+          .edash-tbl{min-width:350px}
+          .edash-welcome{padding:14px}
+          .edash-wl-name{font-size:18px}
+          .edash-wl-avatar{width:56px;height:56px}
+          .edash-sc{padding:10px}
+          .edash-sc-val{font-size:20px}
+          .edash-sc-lbl{font-size:10px}
+          .edash-header{padding:10px 12px}
+          .edash-logout{width:32px;height:32px;font-size:12px}
+          .edash-pg-btn,.edash-pg-num{padding:4px 8px;font-size:11px}
         }
       `}</style>
     </div>

@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect } = require('../middleware/authMiddleware');
+const { protect, requireSubscription } = require('../middleware/authMiddleware');
 const employeeController = require('../controllers/employeeController');
 
-// ✅ NEW: latest profile for employee dashboard
-router.get('/me', protect, employeeController.getMyProfile);
+router.use(protect, requireSubscription);
 
-router.post('/wfh-request', protect, employeeController.submitWfhRequest);
+// ✅ NEW: latest profile for employee dashboard
+router.get('/me', employeeController.getMyProfile);
+
+router.post('/wfh-request', employeeController.submitWfhRequest);
 
 module.exports = router;

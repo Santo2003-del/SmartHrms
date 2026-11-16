@@ -880,7 +880,7 @@ const HrAdminDashboard = () => {
             <FaSyncAlt className={syncing ? "spin" : ""} /> {syncing ? "Syncing…" : "Sync Data"}
           </button>
 
-          <button className="btn-ghost" onClick={logout} title="Logout" type="button">
+          <button className="btn-ghost" onClick={() => logout('/')} title="Logout" type="button">
             Logout
           </button>
         </div>
@@ -2699,18 +2699,70 @@ const HrAdminDashboard = () => {
         .text-muted{color:#94a3b8;font-weight:900;}
         .text-sm{font-size:.82rem;}
 
-        /* Responsive */
+        /* ===== RESPONSIVE ===== */
         @media(max-width: 980px){
           .modern-table{min-width: 860px;}
           .modern-table.compact{min-width: 820px;}
           .onb-grid{grid-template-columns: 1fr;}
         }
-        @media(max-width: 720px){
-          .hr-dashboard{padding: 12px;}
-          .content-panel{padding: 12px;}
-          .form-row{grid-template-columns: 1fr;}
-          .stat-card{min-width: 200px;}
+        @media(max-width: 768px){
+          .hr-dashboard{padding: 14px;}
+          .content-panel{padding: 14px;}
+          .dashboard-header{flex-direction:column;gap:12px;align-items:flex-start;padding:14px 16px;}
+          .header-actions{width:100%;justify-content:flex-end;}
+          .stats-strip{gap:12px;}
+          .stat-card{min-width:calc(50% - 8px);flex:1 1 calc(50% - 8px);}
+          .tabs-container{gap:6px;}
+          .tab-btn{padding:10px 12px;font-size:.82rem;}
+          .section-head{flex-direction:column;align-items:flex-start;gap:10px;}
+          .head-actions{width:100%;justify-content:flex-start;}
           .recruitment-card{padding: 12px;}
+          .onb-grid{grid-template-columns: 1fr;}
+          .modal-card{max-width:95vw;}
+          .modal-card.wide{max-width:95vw;}
+          .form-row{grid-template-columns: 1fr;}
+          .holiday-card{padding:12px;}
+          .stage-cell{flex-direction:column;align-items:flex-start;gap:6px;}
+          .stage-select{min-width:unset;width:100%;}
+        }
+        @media(max-width: 480px){
+          .hr-dashboard{padding: 10px;}
+          .content-panel{padding: 10px;}
+          .dashboard-header{padding:10px 12px;}
+          .header-title h1{font-size:1rem;}
+          .header-title p{font-size:.78rem;}
+          .icon-box-header{width:36px;height:36px;font-size:1rem;}
+          .btn-refresh,.btn-ghost{padding:8px 10px;font-size:.82rem;}
+          .stat-card{min-width:unset;flex:1 1 100%;padding:14px;}
+          .stat-number{font-size:1.6rem;}
+          .stat-title{font-size:.72rem;}
+          .tab-btn{padding:8px 10px;font-size:.78rem;}
+          .tabs-wrapper{margin:0 -10px;padding:0 10px;}
+          .btn-primary-sm,.btn-secondary-sm{padding:7px 10px;font-size:.78rem;}
+          .action-row{flex-wrap:wrap;gap:6px;}
+          .btn-icon{width:30px;height:30px;border-radius:8px;}
+          .btn-xs{padding:6px 8px;font-size:.72rem;}
+          .subtabs{gap:6px;}
+          .subtab-btn{padding:8px 10px;font-size:.78rem;}
+          .user-cell{gap:8px;}
+          .avatar-circle{width:30px;height:30px;font-size:.8rem;}
+          .modern-table th{padding:8px 8px;font-size:.72rem;}
+          .modern-table td{padding:10px 8px;font-size:.82rem;}
+          .modern-table{min-width:700px;}
+          .modern-table.compact{min-width:650px;}
+          .modal-header{padding:10px 12px;}
+          .modal-body{padding:10px 12px;}
+          .close-btn{width:32px;height:32px;border-radius:8px;}
+          .onb-card{padding:10px;min-height:unset;}
+          .search-box-sm{width:100%;}
+        }
+        @media(max-width:400px){
+          .stat-card{padding:10px;}
+          .stat-number{font-size:1.4rem;}
+          .stat-title{font-size:.68rem;}
+          .tab-btn{padding:7px 8px;font-size:.72rem;gap:4px;}
+          .tab-badge{font-size:.65rem;padding:2px 6px;}
+          .edash-pg-btn,.edash-pg-num{padding:4px 6px;font-size:10px;}
         }
       `}</style>
     </div >

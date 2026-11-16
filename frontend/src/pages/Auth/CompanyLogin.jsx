@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaBuilding, FaEnvelope, FaLock, FaArrowRight, FaShieldAlt } from "react-icons/fa";
+import { FaBuilding, FaEnvelope, FaLock, FaArrowRight, FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import { loginUser } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -27,6 +27,7 @@ const CompanyLogin = () => {
   const { login } = useAuth();
 
   const [form, setForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
@@ -74,12 +75,43 @@ const CompanyLogin = () => {
         <form onSubmit={handleLogin} className="company-form">
           <div className="company-input">
             <FaEnvelope className="field-icon" />
-            <input type="email" name="email" placeholder="Owner email address" onChange={handleChange} value={form.email} required />
+            <input type="email" name="email" placeholder="Owner email address" onChange={handleChange} value={form.email} required autoComplete="username" />
           </div>
 
-          <div className="company-input">
+          <div className="company-input" style={{ position: "relative" }}>
             <FaLock className="field-icon" />
-            <input type="password" name="password" placeholder="Password" onChange={handleChange} value={form.password} required />
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              value={form.password}
+              required
+              autoComplete="current-password"
+              style={{ paddingRight: "44px" }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "14px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "transparent",
+                border: "none",
+                color: "#94a3b8",
+                cursor: "pointer",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1rem"
+              }}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
           </div>
 
           <button className="company-btn" disabled={loading}>

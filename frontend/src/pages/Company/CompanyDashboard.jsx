@@ -75,13 +75,10 @@ const CompanyDashboard = () => {
 
   const [settings, setSettings] = useState({
     address: "",
-    lat: "",
-    lng: "",
-    radius: 200,
     startTime: "09:30",
     endTime: "18:30",
     timeZone: "Asia/Kolkata",
-    attendanceMethod: "GPS_FACE",
+    requireFace: true,
   });
 
 
@@ -89,10 +86,9 @@ const CompanyDashboard = () => {
   const safeLogout = useCallback(
     (msg) => {
       if (msg) toast.error(msg);
-      logout();
-      navigate(ROUTES.COMPANY_LOGIN);
+      logout('/');
     },
-    [logout, navigate]
+    [logout]
   );
 
   const normalizeDashboard = (payload) => {
@@ -134,27 +130,15 @@ const CompanyDashboard = () => {
       const loc = c.location || {};
       const office = c.officeTiming || {};
       const pol = c.attendancePolicy || {};
+      const isFaceReq = pol.requireFace !== false && pol.method !== "MANUAL_PUNCH";
 
       setSettings((prev) => ({
         ...prev,
         address: loc.address || prev.address,
-        lat:
-          typeof loc.lat === "number"
-            ? String(loc.lat)
-            : loc.lat
-              ? String(loc.lat)
-              : prev.lat,
-        lng:
-          typeof loc.lng === "number"
-            ? String(loc.lng)
-            : loc.lng
-              ? String(loc.lng)
-              : prev.lng,
-        radius: Number(loc.radius ?? prev.radius) || prev.radius,
         startTime: office.startTime || prev.startTime,
         endTime: office.endTime || prev.endTime,
         timeZone: office.timeZone || prev.timeZone,
-        attendanceMethod: pol.method || prev.attendanceMethod,
+        requireFace: isFaceReq,
       }));
     } catch (err) {
       const code = err?.response?.status;
@@ -198,24 +182,7 @@ const CompanyDashboard = () => {
     const start = settings.startTime;
     const end = settings.endTime;
     if (!start || !end) return "Office start/end time required.";
-    // Simple string compare for HH:MM usually works if same format
     if (end <= start) return "End time must be greater than start time.";
-
-    const rad = Number(settings.radius);
-    if (!rad || rad < 50 || rad > 5000)
-      return "Radius must be between 50 and 5000 meters.";
-
-    const lat = settings.lat?.trim();
-    const lng = settings.lng?.trim();
-    if ((lat && !lng) || (!lat && lng))
-      return "Please enter both Latitude and Longitude.";
-    if (lat && lng) {
-      const latNum = Number(lat);
-      const lngNum = Number(lng);
-      if (Number.isNaN(latNum) || Number.isNaN(lngNum))
-        return "Latitude/Longitude must be numbers.";
-    }
-
     return null;
   };
 
@@ -248,16 +215,9 @@ const CompanyDashboard = () => {
 
     setSavingSettings(true);
 
-    const latNum = settings.lat ? Number(settings.lat) : null;
-    const lngNum = settings.lng ? Number(settings.lng) : null;
-    const radiusNum = Number(settings.radius);
-
     const payloadObj = {
       location: {
         address: settings.address,
-        radius: radiusNum,
-        ...(latNum !== null && !Number.isNaN(latNum) ? { lat: latNum } : {}),
-        ...(lngNum !== null && !Number.isNaN(lngNum) ? { lng: lngNum } : {}),
       },
       officeTiming: {
         startTime: settings.startTime,
@@ -265,11 +225,14 @@ const CompanyDashboard = () => {
         timeZone: settings.timeZone,
       },
       attendancePolicy: {
-        method: settings.attendanceMethod,
+        requireFace: settings.requireFace,
+        method: settings.requireFace ? "FACE_ONLY" : "MANUAL_PUNCH",
+        allowedMethods: settings.requireFace
+          ? ["FACE_ONLY", "MANUAL_HR"]
+          : ["MANUAL_PUNCH", "FACE_ONLY", "MANUAL_HR"],
       },
       // backward safety
       address: settings.address,
-      radius: radiusNum,
       timeZone: settings.timeZone,
       officeStartTime: settings.startTime,
       officeEndTime: settings.endTime,
@@ -406,10 +369,8 @@ const CompanyDashboard = () => {
                   <div className="m-icon"><FaShieldAlt /></div>
                   <div className="m-txt">
                     <label>Attendance Policy</label>
-                    <span>
-                      {ATTENDANCE_METHODS.find(
-                        (m) => m.value === settings.attendanceMethod
-                      )?.label || settings.attendanceMethod}
+                    <span style={{ fontWeight: '600', color: settings.requireFace ? '#93c5fd' : '#86efac' }}>
+                      {settings.requireFace ? "Face Recognition Required" : "Manual Attendance Allowed"}
                     </span>
                   </div>
                 </div>
@@ -615,44 +576,8 @@ const CompanyDashboard = () => {
                     onChange={(e) =>
                       setSettings((p) => ({ ...p, address: e.target.value }))
                     }
-                    placeholder="e.g. Pune, Maharashtra"
+                    placeholder="e.g. Kiwalegoan Ravet, pcmc, pune"
                   />
-                </div>
-
-                <div className="fg">
-                  <label><FaLocationArrow /> Latitude</label>
-                  <input
-                    value={settings.lat}
-                    onChange={(e) =>
-                      setSettings((p) => ({ ...p, lat: e.target.value }))
-                    }
-                    placeholder="18.5204"
-                  />
-                </div>
-
-                <div className="fg">
-                  <label><FaLocationArrow /> Longitude</label>
-                  <input
-                    value={settings.lng}
-                    onChange={(e) =>
-                      setSettings((p) => ({ ...p, lng: e.target.value }))
-                    }
-                    placeholder="73.8567"
-                  />
-                </div>
-
-                <div className="fg">
-                  <label><FaBullseye /> Radius (m)</label>
-                  <input
-                    type="number"
-                    min="50"
-                    max="5000"
-                    value={settings.radius}
-                    onChange={(e) =>
-                      setSettings((p) => ({ ...p, radius: Number(e.target.value || 0) }))
-                    }
-                  />
-                  <small className="hint">Geo-fence distance (meters)</small>
                 </div>
 
                 <div className="fg">
@@ -677,7 +602,7 @@ const CompanyDashboard = () => {
                   />
                 </div>
 
-                <div className="fg">
+                <div className="fg full">
                   <label>Time Zone</label>
                   <select
                     value={settings.timeZone}
@@ -691,22 +616,78 @@ const CompanyDashboard = () => {
                   </select>
                 </div>
 
-                <div className="fg">
-                  <label>Tracking Method</label>
-                  <div
-                    className={`toggle-switch ${settings.attendanceMethod === 'GPS_FACE' ? 'active' : ''}`}
-                    onClick={() =>
-                      setSettings(p => ({
-                        ...p,
-                        attendanceMethod: p.attendanceMethod === 'GPS_FACE' ? 'FACE_ONLY' : 'GPS_FACE'
-                      }))
-                    }
-                    title="Toggle between Face Only and GPS+Face"
-                  />
-                  <small className="hint">{settings.attendanceMethod === 'GPS_FACE' ? 'GPS + Face' : 'Face Only'}</small>
+                <div className="fg full" style={{ marginTop: '10px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '600', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FaShieldAlt style={{ color: '#2563eb' }} /> Employee Attendance Method
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+                    <div
+                      onClick={() => setSettings(p => ({ ...p, requireFace: true }))}
+                      style={{
+                        border: settings.requireFace ? '2px solid #2563eb' : '1px solid #cbd5e1',
+                        background: settings.requireFace ? '#eff6ff' : '#ffffff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px',
+                        boxShadow: settings.requireFace ? '0 4px 12px rgba(37,99,235,0.12)' : 'none'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="attendanceMode"
+                        checked={settings.requireFace}
+                        onChange={() => setSettings(p => ({ ...p, requireFace: true }))}
+                        style={{ marginTop: '4px', cursor: 'pointer', accentColor: '#2563eb', width: '18px', height: '18px' }}
+                      />
+                      <div>
+                        <strong style={{ display: 'block', color: '#1e293b', fontSize: '14px', marginBottom: '4px' }}>
+                          Face Recognition Required
+                        </strong>
+                        <span style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                          Employees must scan face through live camera to punch in & out. High security.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => setSettings(p => ({ ...p, requireFace: false }))}
+                      style={{
+                        border: !settings.requireFace ? '2px solid #10b981' : '1px solid #cbd5e1',
+                        background: !settings.requireFace ? '#f0fdf4' : '#ffffff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '12px',
+                        boxShadow: !settings.requireFace ? '0 4px 12px rgba(16,185,129,0.12)' : 'none'
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="attendanceMode"
+                        checked={!settings.requireFace}
+                        onChange={() => setSettings(p => ({ ...p, requireFace: false }))}
+                        style={{ marginTop: '4px', cursor: 'pointer', accentColor: '#10b981', width: '18px', height: '18px' }}
+                      />
+                      <div>
+                        <strong style={{ display: 'block', color: '#1e293b', fontSize: '14px', marginBottom: '4px' }}>
+                          Allow Manual Attendance (Work Summary)
+                        </strong>
+                        <span style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+                          Employees can punch without face scan by submitting today's work summary / morning tasks.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <button type="submit" className="saveBtn" disabled={savingSettings}>
+                <button type="submit" className="saveBtn" disabled={savingSettings} style={{ marginTop: '10px' }}>
                   {savingSettings ? "Saving..." : "Save Changes"} <FaSave />
                 </button>
               </div>

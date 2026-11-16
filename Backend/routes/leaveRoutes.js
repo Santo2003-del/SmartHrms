@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 
 const leaveController = require('../controllers/leaveController');
-const { protect, hrOnly } = require('../middleware/authMiddleware');
+const { protect, hrOnly, requireSubscription } = require('../middleware/authMiddleware');
+
+router.use(protect, requireSubscription);
 
 // Employee
 router.post('/apply', protect, leaveController.applyLeave);

@@ -167,6 +167,16 @@ const HrAdminEmployeeView = () => {
   const [inTime, setInTime] = useState("");
   const [outTime, setOutTime] = useState("");
 
+  // Interactive Calendar State
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [calModalOpen, setCalModalOpen] = useState(false);
+  const [calSelectedDate, setCalSelectedDate] = useState("");
+  const [calSelectedStatus, setCalSelectedStatus] = useState("Present");
+  const [calInTime, setCalInTime] = useState("");
+  const [calOutTime, setCalOutTime] = useState("");
+  const [calRemarks, setCalRemarks] = useState("Updated via HR Calendar");
+  const [calUpdating, setCalUpdating] = useState(false);
+
   // Edit mode
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -398,6 +408,172 @@ const HrAdminEmployeeView = () => {
       fetchEmployeeKundali();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Action failed");
+    }
+  };
+
+  /* ================= CALENDAR HELPERS ================= */
+  const calYear = calendarDate.getFullYear();
+  const calMonth = calendarDate.getMonth();
+  const calMonthName = calendarDate.toLocaleString("default", { month: "long", year: "numeric" });
+
+  const handlePrevMonth = () => {
+    setCalendarDate(new Date(calYear, calMonth - 1, 1));
+  };
+  const handleNextMonth = () => {
+    setCalendarDate(new Date(calYear, calMonth + 1, 1));
+  };
+  const handleTodayMonth = () => {
+    setCalendarDate(new Date());
+  };
+
+  const calendarCells = useMemo(() => {
+    const firstDayIndex = new Date(calYear, calMonth, 1).getDay(); // 0 = Sun
+    const totalDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const cells = [];
+
+    // Preceding blanks
+    for (let i = 0; i < firstDayIndex; i++) {
+      cells.push({ isBlank: true, key: `blank-${i}` });
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    for (let day = 1; day <= totalDaysInMonth; day++) {
+      const mm = String(calMonth + 1).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      const dateStr = `${calYear}-${mm}-${dd}`;
+      const dayDate = new Date(calYear, calMonth, day);
+      const dayOfWeek = dayDate.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isToday = dateStr === todayStr;
+      const isFuture = dateStr > todayStr;
+
+      // Find record in history
+      const rec = (history || []).find((h) => {
+        if (!h.date) return false;
+        const dStr = typeof h.date === "string" ? h.date.split("T")[0] : new Date(h.date).toISOString().split("T")[0];
+        return dStr === dateStr;
+      });
+
+      let status = "Absent";
+      let statusColor = "bad";
+      let badgeLabel = "Absent";
+      let hours = "";
+
+      if (rec) {
+        const s = String(rec.status || "").toLowerCase();
+        const m = String(rec.mode || "").toLowerCase();
+        if (s.includes("present") || s.includes("completed")) {
+          status = "Present";
+          statusColor = "good";
+          badgeLabel = "Present";
+          if (rec.netWorkHours && rec.netWorkHours !== "--") hours = `${rec.netWorkHours}h`;
+        } else if (s.includes("half")) {
+          status = "HalfDay";
+          statusColor = "warn";
+          badgeLabel = "Half Day";
+        } else if (s.includes("leave") || m.includes("leave")) {
+          status = "On Leave";
+          statusColor = "blue";
+          badgeLabel = "Leave";
+        } else if (s.includes("holiday") || m.includes("holiday")) {
+          status = "Holiday";
+          statusColor = "purple";
+          badgeLabel = "Holiday";
+        } else if (s.includes("absent")) {
+          status = "Absent";
+          statusColor = "bad";
+          badgeLabel = "Absent";
+        } else {
+          status = rec.status;
+          badgeLabel = rec.status;
+        }
+      } else if (isFuture) {
+        status = "Upcoming";
+        statusColor = "future";
+        badgeLabel = "--";
+      } else if (isWeekend) {
+        status = "Weekend";
+        statusColor = "weekend";
+        badgeLabel = "Off";
+      }
+
+      cells.push({
+        isBlank: false,
+        key: dateStr,
+        day,
+        dateStr,
+        status,
+        statusColor,
+        badgeLabel,
+        hours,
+        isToday,
+        isFuture,
+        isWeekend,
+        record: rec,
+      });
+    }
+
+    return cells;
+  }, [calYear, calMonth, history]);
+
+  const handleCalendarDayClick = (cell) => {
+    if (cell.isBlank) return;
+    setCalSelectedDate(cell.dateStr);
+
+    const validStatuses = ["Present", "HalfDay", "On Leave", "Absent", "Holiday"];
+    let defStatus = "Present";
+    if (cell.record?.status && validStatuses.includes(cell.record.status)) {
+      defStatus = cell.record.status;
+    } else if (cell.status && validStatuses.includes(cell.status)) {
+      defStatus = cell.status;
+    } else if (cell.isWeekend) {
+      defStatus = "Holiday";
+    }
+
+    setCalSelectedStatus(defStatus);
+
+    const inT = cell.record?.punchInTime ? formatTime(cell.record.punchInTime) : "";
+    const outT = cell.record?.punchOutTime ? formatTime(cell.record.punchOutTime) : "";
+    setCalInTime(inT && inT !== "--" ? inT : "");
+    setCalOutTime(outT && outT !== "--" ? outT : "");
+    setCalRemarks(cell.record?.dailyReport || "Updated via HR Calendar");
+    setCalModalOpen(true);
+
+    // Sync with sidebar manual attendance form
+    setManualDate(cell.dateStr);
+    setManualStatus(defStatus);
+  };
+
+  const handleCalendarAttendanceSave = async () => {
+    try {
+      if (!user?._id) return toast.warning("User not loaded");
+      setCalUpdating(true);
+
+      const payload = {
+        userId: user._id,
+        date: calSelectedDate,
+        status: calSelectedStatus,
+        inTime: calSelectedStatus === "Present" || calSelectedStatus === "HalfDay" ? (calInTime || undefined) : undefined,
+        outTime: calSelectedStatus === "Present" || calSelectedStatus === "HalfDay" ? (calOutTime || undefined) : undefined,
+        remarks: calRemarks || "Updated via HR Calendar",
+        method: "MANUAL_HR",
+      };
+
+      await tryReq([
+        () => API.post("/attendance/manual", payload),
+        () => API.post("/company/attendance/manual", payload),
+        () => API.post("/hr/attendance/manual", payload),
+      ]);
+
+      toast.success(`Attendance updated to ${calSelectedStatus} for ${calSelectedDate} ✅`);
+      setCalModalOpen(false);
+      fetchEmployeeKundali();
+      if (payrollStats) calculateSalary();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to update attendance");
+    } finally {
+      setCalUpdating(false);
     }
   };
 
@@ -739,6 +915,269 @@ const HrAdminEmployeeView = () => {
             )}
           </section>
 
+          {/* MONTHLY ATTENDANCE CALENDAR */}
+          <section className="modern-card attendance-calendar-card">
+            <div className="card-header" style={{ alignItems: 'center' }}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaCalendarAlt className="icon-orange" /> Monthly Attendance Calendar
+                </h3>
+                <small style={{ color: '#64748b', fontSize: '12px' }}>
+                  Click on any date to view details or change attendance status directly.
+                </small>
+              </div>
+
+              <div className="cal-nav-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="cal-nav-btn"
+                  onClick={handlePrevMonth}
+                  title="Previous Month"
+                  style={{
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600
+                  }}
+                >
+                  <FaChevronLeft />
+                </button>
+                <span style={{ fontWeight: 800, fontSize: '14px', minWidth: '130px', textAlign: 'center', color: '#1e293b' }}>
+                  {calMonthName}
+                </span>
+                <button
+                  type="button"
+                  className="cal-nav-btn"
+                  onClick={handleNextMonth}
+                  title="Next Month"
+                  style={{
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600
+                  }}
+                >
+                  <FaChevronRight />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTodayMonth}
+                  style={{
+                    background: '#fff7ed',
+                    border: '1px solid #fdba74',
+                    color: '#ea580c',
+                    borderRadius: '8px',
+                    padding: '6px 12px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 800
+                  }}
+                >
+                  Today
+                </button>
+              </div>
+            </div>
+
+            {/* Legend Bar */}
+            <div className="cal-legend" style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '12px',
+              padding: '10px 14px',
+              background: '#f8fafc',
+              borderRadius: '10px',
+              margin: '10px 0 14px',
+              fontSize: '12px',
+              fontWeight: 700,
+              border: '1px solid #e2e8f0'
+            }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#166534' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span> Present
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#991b1b' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></span> Absent
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#c2410c' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }}></span> Half Day
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1e40af' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }}></span> Leave
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#6b21a8' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#a855f7' }}></span> Holiday
+              </span>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="cal-grid-wrapper" style={{ overflowX: 'auto' }}>
+              <div style={{ minWidth: '600px' }}>
+                {/* Day of Week Header */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '6px',
+                  textAlign: 'center',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  color: '#64748b',
+                  marginBottom: '6px',
+                  textTransform: 'uppercase'
+                }}>
+                  <div style={{ color: '#ef4444' }}>Sun</div>
+                  <div>Mon</div>
+                  <div>Tue</div>
+                  <div>Wed</div>
+                  <div>Thu</div>
+                  <div>Fri</div>
+                  <div style={{ color: '#ef4444' }}>Sat</div>
+                </div>
+
+                {/* Day Cells */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, 1fr)',
+                  gap: '6px'
+                }}>
+                  {calendarCells.map((cell) => {
+                    if (cell.isBlank) {
+                      return (
+                        <div
+                          key={cell.key}
+                          style={{
+                            minHeight: '76px',
+                            background: '#f8fafc',
+                            borderRadius: '10px',
+                            opacity: 0.4
+                          }}
+                        />
+                      );
+                    }
+
+                    const isGood = cell.statusColor === 'good';
+                    const isBad = cell.statusColor === 'bad';
+                    const isWarn = cell.statusColor === 'warn';
+                    const isBlue = cell.statusColor === 'blue';
+                    const isPurple = cell.statusColor === 'purple';
+                    const isWeekend = cell.statusColor === 'weekend';
+
+                    let cellBg = '#ffffff';
+                    let cellBorder = '#e2e8f0';
+                    let badgeBg = '#f1f5f9';
+                    let badgeColor = '#64748b';
+
+                    if (isGood) {
+                      cellBg = '#f0fdf4';
+                      cellBorder = '#bbf7d0';
+                      badgeBg = '#dcfce7';
+                      badgeColor = '#166534';
+                    } else if (isBad) {
+                      cellBg = '#fef2f2';
+                      cellBorder = '#fecaca';
+                      badgeBg = '#fee2e2';
+                      badgeColor = '#991b1b';
+                    } else if (isWarn) {
+                      cellBg = '#fffbeb';
+                      cellBorder = '#fde68a';
+                      badgeBg = '#fef3c7';
+                      badgeColor = '#92400e';
+                    } else if (isBlue) {
+                      cellBg = '#eff6ff';
+                      cellBorder = '#bfdbfe';
+                      badgeBg = '#dbeafe';
+                      badgeColor = '#1e40af';
+                    } else if (isPurple) {
+                      cellBg = '#faf5ff';
+                      cellBorder = '#e9d5ff';
+                      badgeBg = '#f3e8ff';
+                      badgeColor = '#6b21a8';
+                    } else if (isWeekend) {
+                      cellBg = '#f8fafc';
+                      cellBorder = '#f1f5f9';
+                    }
+
+                    return (
+                      <div
+                        key={cell.key}
+                        onClick={() => handleCalendarDayClick(cell)}
+                        title={`Click to update attendance for ${cell.dateStr}`}
+                        style={{
+                          minHeight: '76px',
+                          background: cellBg,
+                          border: cell.isToday ? '2px solid #ea580c' : `1px solid ${cellBorder}`,
+                          borderRadius: '10px',
+                          padding: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          transition: 'all 0.15s ease',
+                          position: 'relative',
+                          boxShadow: cell.isToday ? '0 0 0 2px rgba(234,88,12,0.2)' : 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 14px rgba(0,0,0,0.08)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'none';
+                          e.currentTarget.style.boxShadow = cell.isToday ? '0 0 0 2px rgba(234,88,12,0.2)' : 'none';
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{
+                            fontSize: '13px',
+                            fontWeight: 900,
+                            color: cell.isToday ? '#ea580c' : (cell.isWeekend ? '#94a3b8' : '#1e293b')
+                          }}>
+                            {cell.day}
+                          </span>
+                          {cell.isToday && (
+                            <span style={{ fontSize: '9px', fontWeight: 900, background: '#ea580c', color: '#fff', padding: '1px 5px', borderRadius: '4px' }}>
+                              TODAY
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ marginTop: '4px' }}>
+                          <span style={{
+                            display: 'block',
+                            textAlign: 'center',
+                            fontSize: '10.5px',
+                            fontWeight: 900,
+                            background: badgeBg,
+                            color: badgeColor,
+                            padding: '3px 4px',
+                            borderRadius: '6px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {cell.badgeLabel}
+                          </span>
+                          {cell.hours && (
+                            <span style={{ display: 'block', textAlign: 'center', fontSize: '9.5px', color: '#64748b', marginTop: '2px', fontWeight: 700 }}>
+                              {cell.hours}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* ATTENDANCE LOG */}
           <section className="modern-card">
             <div className="card-header">
@@ -914,6 +1353,166 @@ const HrAdminEmployeeView = () => {
           </section>
         </main>
       </div>
+
+      {/* ── CALENDAR ATTENDANCE EDIT MODAL ── */}
+      {calModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15,23,42,0.6)',
+          backdropFilter: 'blur(3px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '480px',
+            padding: '24px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+            border: '1px solid #e2e8f0',
+            animation: 'slideUp 0.25s ease-out'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px', marginBottom: '18px' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaCalendarAlt style={{ color: '#ea580c' }} /> Change Attendance
+                </h3>
+                <small style={{ color: '#64748b', fontSize: '12px' }}>
+                  Employee: <b>{user?.name}</b> • Date: <b>{calSelectedDate}</b>
+                </small>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCalModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: '#94a3b8' }}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 900, color: '#475569', marginBottom: '8px' }}>
+                  Select Status
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {[
+                    { label: "Present", color: "#10b981", bg: "#f0fdf4" },
+                    { label: "Absent", color: "#ef4444", bg: "#fef2f2" },
+                    { label: "HalfDay", color: "#f59e0b", bg: "#fffbeb" },
+                    { label: "On Leave", color: "#3b82f6", bg: "#eff6ff" },
+                    { label: "Holiday", color: "#8b5cf6", bg: "#f5f3ff" }
+                  ].map(s => {
+                    const isSelected = calSelectedStatus === s.label;
+                    return (
+                      <button
+                        key={s.label}
+                        type="button"
+                        onClick={() => setCalSelectedStatus(s.label)}
+                        style={{
+                          padding: '10px 6px',
+                          borderRadius: '10px',
+                          border: isSelected ? `2px solid ${s.color}` : '1px solid #e2e8f0',
+                          background: isSelected ? s.bg : '#ffffff',
+                          color: isSelected ? s.color : '#475569',
+                          fontWeight: 900,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {(calSelectedStatus === "Present" || calSelectedStatus === "HalfDay") && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#475569', marginBottom: '4px' }}>
+                      In Time (Optional)
+                    </label>
+                    <input
+                      type="time"
+                      value={calInTime}
+                      onChange={(e) => setCalInTime(e.target.value)}
+                      style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#475569', marginBottom: '4px' }}>
+                      Out Time (Optional)
+                    </label>
+                    <input
+                      type="time"
+                      value={calOutTime}
+                      onChange={(e) => setCalOutTime(e.target.value)}
+                      style={{ padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#475569', marginBottom: '4px' }}>
+                  Remarks / Note
+                </label>
+                <input
+                  type="text"
+                  value={calRemarks}
+                  onChange={(e) => setCalRemarks(e.target.value)}
+                  placeholder="e.g. Approved leave / Worked from client office"
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', width: '100%' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setCalModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f8fafc',
+                    color: '#64748b',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCalendarAttendanceSave}
+                  disabled={calUpdating}
+                  style={{
+                    flex: 2,
+                    padding: '10px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: '#ea580c',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {calUpdating ? "Updating..." : "Save Attendance"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* STYLES */}
       <style>{`

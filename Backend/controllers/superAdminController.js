@@ -187,12 +187,15 @@ const approveInquiry = async (req, res) => {
       status: "Active",
     };
 
+    // Generate a secure random password if partner did not submit one with the inquiry
+    const generatedPassword = inquiry.password ? null : Math.random().toString(36).slice(-8) + Math.floor(10 + Math.random() * 90);
+
     const ownerPayload = {
       name: clampStr(inquiry.contactPerson || inquiry.companyName, 120),
       email,
       mobile: String(inquiry.mobile || "0000000000").trim(),
-      password: String(inquiry.password), // Use hashed password
-      _isPasswordAlreadyHashed: true, // Flag for User model
+      password: inquiry.password ? String(inquiry.password) : generatedPassword,
+      _isPasswordAlreadyHashed: Boolean(inquiry.password), // Only true if pre-hashed
       role: "CompanyAdmin",
       designation: "Owner",
       status: "Active",
@@ -267,19 +270,22 @@ const approveInquiry = async (req, res) => {
 
     // Send Approval Email asynchronously
     try {
+      const passwordLine = generatedPassword ? `Password: ${generatedPassword}\n\nPlease change your password after your initial login.` : 'Password: (Use the password you entered when submitting your inquiry)';
+
       const approvalMessage = `
-            Dear ${ownerPayload.name},
-            
-            Congratulations! Your GMV Smart HRMS account has been APPROVED.
-            
-            You can now login to your dashboard:
-            URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/company-login
-            Email: ${email}
-            
-            Welcome aboard!
-            
-            Regards,
-            GMV Smart HRMS Team
+Dear ${ownerPayload.name},
+
+Congratulations! Your GMV Smart HRMS account has been APPROVED.
+
+You can now login to your dashboard:
+URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/company-login
+Email: ${email}
+${passwordLine}
+
+Welcome aboard!
+
+Regards,
+GMV Smart HRMS Team
         `;
       // Don't await if you want to respond faster, but let's await for reliability in this debug phase
       await sendEmail({
@@ -305,6 +311,72 @@ const approveInquiry = async (req, res) => {
     return res.status(500).json({ message: "Provisioning Failed: " + (error?.message || "Unknown error") });
   }
 };
+
+/* ================= 4.5) ADD COMPANY DIRECTLY ================= */
+const createCompanyDirectly = async (req, res) => {
+  try {
+    if (!isSuperAdmin(req)) return res.status(403).json({ message: "SuperAdmin only" });
+
+    const { companyName, contactPerson, email, mobile, password, address } = req.body || {};
+    if (!companyName || !email || !password) {
+      return res.status(400).json({ message: "Company Name, Email, and Password are required." });
+    }
+
+    const normEmail = normalizeEmail(email);
+
+    // Prevent duplicates
+    const [existingCompany, existingUser] = await Promise.all([
+      Company.findOne({ email: normEmail }),
+      User.findOne({ email: normEmail }),
+    ]);
+    if (existingCompany || existingUser) {
+      return res.status(409).json({ message: "Email already exists in system." });
+    }
+
+    const companyPayload = {
+      name: clampStr(companyName, 120),
+      email: normEmail,
+      location: {
+        address: clampStr(address, 300) || "N/A",
+        lat: 0,
+        lng: 0,
+        radius: 3000,
+      },
+      status: "Active",
+    };
+
+    const ownerPayload = {
+      name: clampStr(contactPerson || companyName, 120),
+      email: normEmail,
+      mobile: String(mobile || "0000000000").trim(),
+      password: String(password), 
+      role: "CompanyAdmin",
+      designation: "Owner",
+      status: "Active",
+      isApproved: true,
+      approvedAt: new Date(),
+    };
+
+    const companyDoc = await Company.create(companyPayload);
+    ownerPayload.companyId = companyDoc._id;
+
+    const owner = new User(ownerPayload);
+    await owner.save();
+
+    return res.status(201).json({
+      message: "Company Created Successfully ✅",
+      companyId: companyDoc._id,
+    });
+
+  } catch (error) {
+    console.error("createCompanyDirectly error:", error);
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "Duplicate key. Company/User already exists." });
+    }
+    return res.status(500).json({ message: "Failed to create company." });
+  }
+};
+
 
 /* ================= 5) MANAGE HR LIMIT REQUEST ================= */
 const manageHrLimit = async (req, res) => {
@@ -440,12 +512,153 @@ const deleteCompany = async (req, res) => {
   }
 };
 
+/* ================= 8) NEW SUBSCRIPTION ENDPOINTS ================= */
+const getInquiries = async (req, res) => {
+  try {
+    if (!isSuperAdmin(req)) return res.status(403).json({ message: "SuperAdmin only" });
+    const inquiries = await Inquiry.find().sort({ createdAt: -1 }).lean();
+    res.json({ inquiries });
+  } catch (err) {
+    console.error("getInquiries Error:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+const inquiryAction = async (req, res) => {
+  try {
+    if (!isSuperAdmin(req)) return res.status(403).json({ message: "SuperAdmin only" });
+    const { id } = req.params;
+    const { status, plan, paymentRef, paymentAmount, notes } = req.body;
+
+    const inq = await Inquiry.findById(id);
+    if (!inq) return res.status(404).json({ message: "Inquiry not found" });
+
+    if (status) inq.status = status;
+    if (plan) inq.plan = plan;
+    if (paymentRef !== undefined) inq.paymentRef = paymentRef;
+    if (paymentAmount !== undefined) inq.paymentAmount = paymentAmount;
+    if (notes !== undefined) inq.notes = notes;
+
+    await inq.save();
+    
+    // Also update company subscription status if company is linked
+    if (inq.companyId && (status === 'Active' || status === 'Suspended' || status === 'Expired')) {
+      await Company.findByIdAndUpdate(inq.companyId, { subscriptionStatus: status === 'Suspended' || status === 'Expired' ? 'Inactive' : 'Active' });
+    }
+
+    res.json({ message: "Inquiry Action Successful" });
+  } catch (err) {
+    console.error("inquiryAction Error:", err);
+    res.status(500).json({ message: "Action failed" });
+  }
+};
+
+const provisionCompany = async (req, res) => {
+  try {
+    if (!isSuperAdmin(req)) return res.status(403).json({ message: "SuperAdmin only" });
+    const { id } = req.params;
+    const { plan, durationDays } = req.body;
+    
+    const inq = await Inquiry.findById(id);
+    if (!inq) return res.status(404).json({ message: "Inquiry not found" });
+    if (inq.companyId) return res.status(400).json({ message: "Company already provisioned" });
+
+    const email = normalizeEmail(inq.email);
+
+    // Prevent duplicates
+    const [existingCompany, existingUser] = await Promise.all([
+      Company.findOne({ email }),
+      User.findOne({ email }),
+    ]);
+    if (existingCompany || existingUser) {
+      return res.status(409).json({ message: "Email already exists in system." });
+    }
+
+    const start = new Date();
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + (Number(durationDays) || 30));
+
+    const generatedPassword = Math.random().toString(36).slice(-8);
+
+    const companyPayload = {
+      name: clampStr(inq.companyName, 120),
+      email,
+      location: {
+        address: inq.address || "N/A",
+        lat: 0,
+        lng: 0,
+        radius: 3000,
+      },
+      status: "Active",
+      subscriptionPlan: plan || inq.plan || "Free Trial",
+      subscriptionStatus: "Active",
+      subscriptionStart: start,
+      subscriptionExpiry: expiry
+    };
+
+    const companyDoc = await Company.create(companyPayload);
+
+    const ownerPayload = {
+      name: clampStr(inq.contactPerson || inq.companyName, 120),
+      email,
+      mobile: String(inq.mobile || "0000000000").trim(),
+      password: generatedPassword, 
+      role: "CompanyAdmin",
+      designation: "Owner",
+      status: "Active",
+      isApproved: true,
+      approvedAt: new Date(),
+      companyId: companyDoc._id
+    };
+
+    const owner = new User(ownerPayload);
+    await owner.save();
+
+    inq.status = "Active";
+    inq.companyId = companyDoc._id;
+    await inq.save();
+    
+    // Send email with credentials
+    try {
+      const msg = `
+Dear ${ownerPayload.name},
+
+Your subscription for ${companyPayload.name} has been activated!
+Your Plan: ${companyPayload.subscriptionPlan}
+Valid until: ${expiry.toDateString()}
+
+Login URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/company-login
+Email: ${email}
+Password: ${generatedPassword}
+
+Please change your password after logging in.
+
+Regards,
+GMV Smart HRMS Team
+      `;
+      await sendEmail({ email: email, subject: 'Account Provisioned - GMV Smart HRMS', message: msg });
+    } catch (e) {
+      console.error("Failed to send provision email", e);
+    }
+
+    res.status(201).json({ message: "Company Provisioned Successfully", companyId: companyDoc._id });
+  } catch (err) {
+    console.error("provisionCompany error:", err);
+    res.status(500).json({ message: "Provisioning Failed" });
+  }
+};
+
+
 module.exports = {
   getDashboardData,
   getAllInquiries,
   updateInquiry,
   approveInquiry,
+  createCompanyDirectly,
   manageHrLimit,
   updateCompanyDetails,
-  deleteCompany
+  deleteCompany,
+  getInquiries,
+  inquiryAction,
+  provisionCompany
 };

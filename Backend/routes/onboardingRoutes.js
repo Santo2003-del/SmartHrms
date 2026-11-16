@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, hrOnly } = require('../middleware/authMiddleware');
+const { protect, hrOnly, requireSubscription } = require('../middleware/authMiddleware');
 const onboardingController = require('../controllers/onboardingController');
 
-router.use(protect);
+router.use(protect, requireSubscription);
 
 /* ================= HR: Templates ================= */
 router.get('/templates', hrOnly, onboardingController.listTemplates);

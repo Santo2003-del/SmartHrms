@@ -3,14 +3,15 @@ const router = express.Router();
 const User = require('../models/User'); // ✅ Import User for safety fallback
 
 // ✅ Import hrOnly so HR Admins can access employee data
-const { protect, companyOwnerOnly, hrOnly } = require('../middleware/authMiddleware');
+const { protect, companyOwnerOnly, hrOnly, requireSubscription } = require('../middleware/authMiddleware');
 const controller = require('../controllers/companyController');
 const hrController = require('../controllers/hrController'); // ✅ Imported for reuse
 const leaveController = require('../controllers/leaveController'); // ✅ Imported for leaves
 const { uploadImage } = require('../middleware/uploadMiddleware');
 
-// Apply Authentication to all routes
+// Apply Authentication and Subscription checks to all routes
 router.use(protect);
+router.use(requireSubscription);
 
 /* =========================================================================
    1. SENSITIVE ROUTES (Owner Only)
@@ -84,5 +85,8 @@ router.get('/payroll/salary-slip/:userId', hrOnly, hrController.generateSalarySl
 
 // ✅ Leave Routes (For Employee View)
 router.get('/leaves/employee/:userId', hrOnly, leaveController.getEmployeeLeaves);
+
+// ✅ Subscription Renewal
+router.post('/renewal-request', companyOwnerOnly, controller.requestRenewal);
 
 module.exports = router;

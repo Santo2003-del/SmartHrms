@@ -14,6 +14,8 @@ import {
   FaExclamationTriangle,
   FaChevronLeft,
   FaChevronRight,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import { useClientPagination } from "../../utils/useClientPagination";
 import Pagination from "../../components/Pagination";
@@ -27,6 +29,7 @@ const HRManagement = () => {
 
   // Modal States
   const [showModal, setShowModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -307,23 +310,47 @@ const HRManagement = () => {
                   />
                 </div>
 
-                <div className="form-group">
+                <div className="form-group" style={{ position: "relative" }}>
                   <label>
                     {isEditMode ? "New Password (Optional)" : "Password"}
                   </label>
-                  <input
-                    type="password"
-                    placeholder={
-                      isEditMode
-                        ? "Leave blank to keep current"
-                        : "Min 6 characters"
-                    }
-                    required={!isEditMode}
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                  />
+                  <div style={{ position: "relative", width: "100%" }}>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={
+                        isEditMode
+                          ? "Leave blank to keep current"
+                          : "Min 6 characters"
+                      }
+                      required={!isEditMode}
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      style={{ width: "100%", paddingRight: "40px", boxSizing: "border-box" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "transparent",
+                        border: "none",
+                        color: "#64748b",
+                        cursor: "pointer",
+                        padding: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: "1rem"
+                      }}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="form-group full">

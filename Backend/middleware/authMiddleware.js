@@ -157,11 +157,42 @@ const requireActiveUser = (req, res, next) => {
   next();
 };
 
+// ✅ Subscription Enforcement Middleware
+const requireSubscription = (req, res, next) => {
+  if (req.user?.role === 'SuperAdmin') return next();
+  
+  if (!req.company) {
+    return res.status(403).json({ 
+      errorType: 'SUBSCRIPTION_REQUIRED',
+      message: 'Company not found or suspended.' 
+    });
+  }
+
+  const { subscriptionStatus, subscriptionExpiry } = req.company;
+  
+  if (subscriptionStatus !== 'Active') {
+    return res.status(403).json({ 
+      errorType: 'SUBSCRIPTION_REQUIRED',
+      message: 'Subscription is inactive. Please renew to continue.' 
+    });
+  }
+
+  if (subscriptionExpiry && new Date() > new Date(subscriptionExpiry)) {
+    return res.status(403).json({ 
+      errorType: 'SUBSCRIPTION_REQUIRED',
+      message: 'Subscription expired. Please renew to continue.' 
+    });
+  }
+
+  next();
+};
+
 module.exports = {
   protect,
   authorize,
   tenantOnly,
   requireActiveUser,
+  requireSubscription,
 
   // ✅ these are needed because your routes are using them
   hrOnly,

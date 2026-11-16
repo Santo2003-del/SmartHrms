@@ -1,21 +1,24 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, hrOnly } = require('../middleware/authMiddleware');
+const { protect, hrOnly, requireSubscription } = require('../middleware/authMiddleware');
 const controller = require('../controllers/attendanceController');
 
-// EMPLOYEE
-router.post('/punch-in', protect, controller.punchIn);
-router.post('/punch-out', protect, controller.punchOut);
-router.post('/break-start', protect, controller.startBreak);
-router.post('/break-end', protect, controller.endBreak);
+// Apply subscription check to all routes
+router.use(protect, requireSubscription);
 
-router.get('/history', protect, controller.getMyHistory);
-router.get('/stats', protect, controller.getAttendanceStats);
+// EMPLOYEE
+router.post('/punch-in', controller.punchIn);
+router.post('/punch-out', controller.punchOut);
+router.post('/break-start', controller.startBreak);
+router.post('/break-end', controller.endBreak);
+
+router.get('/history', controller.getMyHistory);
+router.get('/stats', controller.getAttendanceStats);
 
 // HR / ADMIN
-router.get('/all', protect, hrOnly, controller.getAllAttendance);
-router.get('/history/:userId', protect, hrOnly, controller.getUserHistory);
-router.post('/manual', protect, hrOnly, controller.markManualAttendance);
+router.get('/all', hrOnly, controller.getAllAttendance);
+router.get('/history/:userId', hrOnly, controller.getUserHistory);
+router.post('/manual', hrOnly, controller.markManualAttendance);
 
 module.exports = router;

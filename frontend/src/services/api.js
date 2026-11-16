@@ -61,7 +61,12 @@ API.interceptors.response.use(
     const currentPath = window.location.pathname || "";
 
     // ✅ 403 auto redirect OFF (dashboard fallback support)
-    if (status === 403) return Promise.reject(err);
+    if (status === 403) {
+      if (err?.response?.data?.errorType === 'SUBSCRIPTION_REQUIRED') {
+        window.dispatchEvent(new CustomEvent("subscription_expired", { detail: err.response.data }));
+      }
+      return Promise.reject(err);
+    }
 
     if (status === 401) {
       if (!isPublicPath(currentPath)) {
@@ -91,6 +96,9 @@ export const submitInquiry = (data) => API.post("/auth/inquiry", data);
 export const getInquiries = (query = "") => API.get(`/superadmin/inquiries${query}`);
 export const deleteInquiry = (id) => API.delete(`/superadmin/inquiry/${id}`);
 export const approveInquiry = (id) => API.post(`/superadmin/approve-inquiry`, { inquiryId: id });
+
+// Subscription
+export const requestRenewal = (data) => API.post("/company/renewal-request", data);
 
 // Support Hub
 export const raiseSupportTicket = (data) => API.post("/support/ticket", data);
@@ -228,6 +236,7 @@ export const getStats = () => API.get("/attendance/stats");
 
 // --- HR Management ---
 export const getAllEmployees = () => API.get("/company/employees");
+export const getCompanyProfile = () => API.get("/company/profile");
 export const getAllAttendance = () => API.get("/attendance/all");
 
 // --- File Download Helper ---

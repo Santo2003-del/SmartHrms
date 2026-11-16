@@ -400,3 +400,97 @@ p {
   color: #0f172a;
   border-color: #cbd5e1;
 }
+
+/* ==============================
+   GLOBAL RESPONSIVE BREAKPOINTS
+   ============================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .left-panel {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .right-panel {
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .container {
+    padding: 0 12px;
+    margin: 16px auto;
+  }
+
+  .modal-content {
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .table-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .clean-table th,
+  .clean-table td {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .flex-between {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-box {
+    padding: 16px;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+  }
+
+  .container {
+    padding: 0 10px;
+    margin: 10px auto;
+  }
+
+  .content-box {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .modal-content {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  .pagination-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+}

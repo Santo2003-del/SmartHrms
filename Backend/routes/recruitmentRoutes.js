@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { protect, authorize } = require("../middleware/authMiddleware");
+const { protect, authorize, requireSubscription } = require("../middleware/authMiddleware");
 const { uploadTaskFiles } = require("../middleware/uploadMiddleware");
 const controller = require("../controllers/recruitmentController");
 
@@ -28,7 +28,7 @@ router.post(
 /* =========================
    PROTECTED HR ROUTES
 ========================= */
-router.use(protect);
+router.use(protect, requireSubscription);
 
 // Jobs
 router.post("/job", authorize("Admin", "CompanyAdmin", "SuperAdmin"), controller.createJob);

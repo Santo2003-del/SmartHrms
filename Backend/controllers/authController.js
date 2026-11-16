@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
+const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const Company = require('../models/Company');
@@ -125,17 +127,26 @@ const superAdminLogin = async (req, res) => {
     const envEmail = process.env.SUPER_ADMIN_EMAIL;
     const envPass = process.env.SUPER_ADMIN_PASSWORD;
 
-    console.log("DEBUG LOGIN:", {
-      receivedEmail: email,
-      envEmail: envEmail,
-      passMatch: String(password) === String(envPass)
-    });
-
     if (!envEmail || !envPass) {
       return res.status(500).json({ message: 'Super Admin not configured on server.' });
     }
 
-    if (String(email || '') !== envEmail || String(password || '') !== envPass) {
+    // ✅ Timing-safe comparison to prevent timing attacks
+    const emailMatch = email && envEmail
+      ? crypto.timingSafeEqual(
+        Buffer.from(String(email).padEnd(256)),
+        Buffer.from(String(envEmail).padEnd(256))
+      )
+      : false;
+
+    const passMatch = password && envPass
+      ? crypto.timingSafeEqual(
+        Buffer.from(String(password).padEnd(256)),
+        Buffer.from(String(envPass).padEnd(256))
+      )
+      : false;
+
+    if (!emailMatch || !passMatch) {
       return res.status(401).json({ message: 'Invalid Super Admin credentials' });
     }
 
@@ -157,10 +168,6 @@ const superAdminLogin = async (req, res) => {
 /* ================= 3) EMPLOYEE REGISTRATION (PUBLIC) ================= */
 const registerEmployee = async (req, res) => {
   try {
-    console.log("INCOMING REGISTRATION DATA:");
-    console.log("Body:", req.body);
-    console.log("File:", req.file);
-
     const { name, email, mobile, password, designation, companyId, faceDescriptor } = req.body || {};
     const e = normalizeEmail(email);
 
@@ -170,6 +177,11 @@ const registerEmployee = async (req, res) => {
 
     if (!name || !e || !password || !companyId) {
       return res.status(400).json({ message: 'Name, email, password, companyId required' });
+    }
+
+    // ✅ Validate ObjectId format to prevent NoSQL injection
+    if (!mongoose.Types.ObjectId.isValid(companyId)) {
+      return res.status(400).json({ message: 'Invalid Company ID format.' });
     }
 
     const company = await Company.findById(companyId);
@@ -209,7 +221,6 @@ const registerEmployee = async (req, res) => {
       userId: user._id
     });
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
     res.status(500).json({ message: 'Server Error during registration' });
   }
 };
@@ -251,15 +262,14 @@ const submitInquiry = async (req, res) => {
     const mobile = String(body.mobile || '').trim();
     const address = String(body.address || '').trim();
 
-    const lat = Number.parseFloat(body.lat);
-    const lng = Number.parseFloat(body.lng);
+    // lat/lng are optional — default to 0 if not provided (admin will update later via dashboard)
+    const latRaw = Number.parseFloat(body.lat);
+    const lngRaw = Number.parseFloat(body.lng);
+    const lat = Number.isFinite(latRaw) ? latRaw : 0;
+    const lng = Number.isFinite(lngRaw) ? lngRaw : 0;
 
-    if (!companyName || !contactPerson || !email || !mobile || !address) {
-      return res.status(400).json({ message: 'Please fill all required fields.' });
-    }
-
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return res.status(400).json({ message: 'Invalid Coordinates. Please use the map pin or enter manually.' });
+    if (!companyName || !contactPerson || !email || !mobile) {
+      return res.status(400).json({ message: 'Please fill all required fields (Company Name, Contact Person, Email, Mobile).' });
     }
 
     // radius validation (keep old logic but safe)
@@ -310,29 +320,44 @@ const submitInquiry = async (req, res) => {
       radius,
       officeTiming: officeTiming && typeof officeTiming === 'object' ? officeTiming : undefined,
       status: 'Pending',
-      password: await bcrypt.hash(body.password, 10) // Hash password
+      password: body.password ? await bcrypt.hash(body.password, 10) : undefined // Hash password only if provided
     };
 
     const inquiry = await Inquiry.create(payload);
 
-    // Send email notification to Super Admin
-    const sendEmail = require('../utils/sendEmail');
-    await sendEmail({
-      email: process.env.SUPER_ADMIN_EMAIL || 'reportsinsider@gmail.com', // Fallback or both
-      subject: 'New Company Inquiry - ' + companyName,
-      message: `A new company has requested access.\n\nCompany: ${companyName}\nContact: ${contactPerson}\nEmail: ${email}\nMobile: ${mobile}\n\nPlease login to Super Admin dashboard to approve or reject.`
-    });
+    // Send email notification to Super Admin (non-blocking - don't fail submission if email fails)
+    try {
+      const sendEmail = require('../utils/sendEmail');
+      const emailBody = `A new company has submitted a Partner With Us inquiry.\n\n` +
+        `Company: ${companyName}\n` +
+        `Contact: ${contactPerson}\n` +
+        `Email: ${email}\n` +
+        `Mobile: ${mobile}\n` +
+        `Address: ${address || 'Not provided'}\n` +
+        `City: ${payload.city || 'N/A'}\n` +
+        `Industry: ${payload.industryType || 'N/A'}\n` +
+        `Employees: ${payload.employeeCount || 'N/A'}\n` +
+        `Plan Requested: ${body.plan || 'Free Trial'}\n` +
+        `Message: ${body.message || 'None'}\n\n` +
+        `Please login to Super Admin dashboard to review and approve:\n${process.env.FRONTEND_URL || 'http://localhost:3001'}/superadmin/dashboard`;
 
-    // Also send to reportsinsider if different
-    if (process.env.SUPER_ADMIN_EMAIL !== 'reportsinsider@gmail.com') {
-      await sendEmail({
-        email: 'reportsinsider@gmail.com',
-        subject: 'New Company Inquiry - ' + companyName,
-        message: `A new company has requested access.\n\nCompany: ${companyName}\nContact: ${contactPerson}\nEmail: ${email}\nMobile: ${mobile}\n\nPlease login to Super Admin dashboard to approve or reject.`
-      });
+      const emailTargets = new Set([
+        process.env.SUPER_ADMIN_EMAIL,
+        'reportsinsider@gmail.com'
+      ].filter(Boolean));
+
+      for (const target of emailTargets) {
+        await sendEmail({
+          email: target,
+          subject: `🏢 New Partner Inquiry - ${companyName}`,
+          message: emailBody
+        }).catch(e => console.error('Email send failed to', target, e));
+      }
+    } catch (emailErr) {
+      console.error('Email notification error (non-fatal):', emailErr);
     }
 
-    return res.status(201).json({ message: 'Your request is under review. Our team will verify your details and approve your access soon.', inquiry });
+    return res.status(201).json({ message: 'Your request is under review. Our team will verify your details and approve your access soon.', inquiryId: inquiry._id });
   } catch (err) {
     console.error('submitInquiry error:', err);
 

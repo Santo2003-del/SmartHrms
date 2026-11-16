@@ -2,8 +2,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorize, requireSubscription } = require('../middleware/authMiddleware');
 const { uploadTaskFiles } = require('../middleware/uploadMiddleware');
+
+router.use(protect, requireSubscription);
 
 const {
   assignTask,

@@ -722,6 +722,85 @@ const Home = () => {
       </section>
 
       {/* =========================================================
+          SUBSCRIPTION PLANS SECTION
+         ========================================================= */}
+      <section style={{ padding: "100px 0", background: "#0a0a0a", position: "relative" }}>
+        <div className="container" style={{ width: "90%", maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+          <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+            <h2 style={{ fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: "800", marginBottom: "1rem", color: "#fff" }}>
+              Transparent <span style={{ color: "#00ff9d" }}>Pricing</span>
+            </h2>
+            <p style={{ color: "#94a3b8", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto" }}>
+              Choose the perfect plan to scale your workforce management.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem", alignItems: "center" }}>
+            {/* FREE TRIAL */}
+            <motion.div whileHover={{ translateY: -10 }} style={{
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", padding: "2.5rem 2rem", textAlign: "center"
+            }}>
+              <h3 style={{ fontSize: "1.5rem", color: "#fff", marginBottom: "1rem" }}>Free Trial</h3>
+              <div style={{ fontSize: "3rem", fontWeight: "900", color: "#00ff9d", marginBottom: "0.5rem" }}>₹0</div>
+              <p style={{ color: "#94a3b8", marginBottom: "2rem" }}>For 7 days</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 2rem 0", textAlign: "left", color: "#ccc", fontSize: "0.95rem", lineHeight: "2.5" }}>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Full Access to Core HR</li>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Face & GPS Attendance</li>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Employee Self-Service</li>
+              </ul>
+              <Link to="/partner-with-us?plan=Free+Trial" style={{ textDecoration: "none" }}>
+                <button style={{
+                  width: "100%", padding: "15px", borderRadius: "10px", border: "1px solid #00ff9d", background: "transparent", color: "#00ff9d", fontWeight: "700", cursor: "pointer", transition: "all 0.3s"
+                }} onMouseOver={e => e.target.style.background = "rgba(0,255,157,0.1)"} onMouseOut={e => e.target.style.background = "transparent"}>Start Trial</button>
+              </Link>
+            </motion.div>
+
+            {/* ANNUAL PLAN - BEST VALUE */}
+            <motion.div whileHover={{ translateY: -10 }} style={{
+              background: "linear-gradient(180deg, rgba(0,255,157,0.1) 0%, rgba(0,0,0,0) 100%)", border: "2px solid #00ff9d", borderRadius: "20px", padding: "3rem 2rem", textAlign: "center", position: "relative", transform: "scale(1.05)", zIndex: 3
+            }}>
+              <div style={{ position: "absolute", top: "-15px", left: "50%", transform: "translateX(-50%)", background: "#00ff9d", color: "#000", padding: "5px 15px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "800", textTransform: "uppercase" }}>Best Value</div>
+              <h3 style={{ fontSize: "1.8rem", color: "#fff", marginBottom: "1rem" }}>Annual Plan</h3>
+              <div style={{ fontSize: "3.5rem", fontWeight: "900", color: "#00ff9d", marginBottom: "0.5rem" }}>₹10,000</div>
+              <p style={{ color: "#94a3b8", marginBottom: "0.5rem" }}>Per Year</p>
+              <p style={{ color: "#ff4d4d", fontSize: "0.85rem", textDecoration: "line-through", marginBottom: "0.2rem" }}>Regular: ₹15,196</p>
+              <p style={{ color: "#00ff9d", fontSize: "0.9rem", fontWeight: "700", marginBottom: "2rem" }}>Save ₹5,196</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 2rem 0", textAlign: "left", color: "#fff", fontSize: "0.95rem", lineHeight: "2.5" }}>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Everything in Trial</li>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Payroll & Expense Management</li>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Recruitment & Onboarding</li>
+                <li><FaCheckCircle color="#00ff9d" style={{ marginRight: "10px" }}/> Priority 24/7 Support</li>
+              </ul>
+              <Link to="/partner-with-us?plan=Annual+Plan" style={{ textDecoration: "none" }}>
+                <button style={{
+                  width: "100%", padding: "15px", borderRadius: "10px", border: "none", background: "#00ff9d", color: "#000", fontWeight: "800", cursor: "pointer", transition: "all 0.3s", boxShadow: "0 5px 20px rgba(0,255,157,0.3)"
+                }} onMouseOver={e => e.target.style.transform = "translateY(-2px)"} onMouseOut={e => e.target.style.transform = "translateY(0)"}>Subscribe Annually</button>
+              </Link>
+            </motion.div>
+
+            {/* QUARTERLY PLAN */}
+            <motion.div whileHover={{ translateY: -10 }} style={{
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", padding: "2.5rem 2rem", textAlign: "center"
+            }}>
+              <h3 style={{ fontSize: "1.5rem", color: "#fff", marginBottom: "1rem" }}>Quarterly Plan</h3>
+              <div style={{ fontSize: "3rem", fontWeight: "900", color: "#00c6ff", marginBottom: "0.5rem" }}>₹3,799</div>
+              <p style={{ color: "#94a3b8", marginBottom: "2rem" }}>Per 3 Months</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 2rem 0", textAlign: "left", color: "#ccc", fontSize: "0.95rem", lineHeight: "2.5" }}>
+                <li><FaCheckCircle color="#00c6ff" style={{ marginRight: "10px" }}/> Full Access to Core HR</li>
+                <li><FaCheckCircle color="#00c6ff" style={{ marginRight: "10px" }}/> Payroll & Expense Management</li>
+                <li><FaCheckCircle color="#00c6ff" style={{ marginRight: "10px" }}/> Standard Support</li>
+              </ul>
+              <Link to="/partner-with-us?plan=Quarterly+Plan" style={{ textDecoration: "none" }}>
+                <button style={{
+                  width: "100%", padding: "15px", borderRadius: "10px", border: "1px solid #00c6ff", background: "transparent", color: "#00c6ff", fontWeight: "700", cursor: "pointer", transition: "all 0.3s"
+                }} onMouseOver={e => e.target.style.background = "rgba(0,198,255,0.1)"} onMouseOut={e => e.target.style.background = "transparent"}>Subscribe Quarterly</button>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
           CTA SECTION (Neon Gradient Background)
          ========================================================= */}
       <section style={{

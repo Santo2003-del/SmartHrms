@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-const { protect, hrOnly } = require('../middleware/authMiddleware');
+const { protect, hrOnly, requireSubscription } = require('../middleware/authMiddleware');
 const hrController = require('../controllers/hrController');
+
+router.use(protect, requireSubscription);
 
 // Employees
 router.get('/employees', protect, hrOnly, hrController.getAllEmployees);

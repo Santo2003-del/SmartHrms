@@ -3,6 +3,7 @@ const Company = require('../models/Company');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
 const Ticket = require('../models/Ticket');
+const Inquiry = require('../models/Inquiry');
 const sendEmail = require('../utils/sendEmail');
 
 /* ---------------- Helpers ---------------- */
@@ -197,9 +198,16 @@ const updateCompanyProfile = async (req, res) => {
 
       // allowedMethods sanitize
       if (Array.isArray(p.allowedMethods)) {
-        const allowed = ['GPS_FACE', 'FACE_ONLY', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR'];
+        const allowed = ['GPS_FACE', 'FACE_ONLY', 'MANUAL_PUNCH', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR'];
         p.allowedMethods = p.allowedMethods.filter((m) => allowed.includes(m));
-        if (!p.allowedMethods.length) p.allowedMethods = ['GPS_FACE', 'MANUAL_HR'];
+        if (!p.allowedMethods.length) p.allowedMethods = ['FACE_ONLY', 'MANUAL_HR'];
+      }
+
+      // If requireFace is specifically toggled
+      if (typeof p.requireFace === 'boolean') {
+        if (!p.requireFace && !p.allowedMethods?.includes('MANUAL_PUNCH')) {
+          p.allowedMethods = [...(p.allowedMethods || []), 'MANUAL_PUNCH'];
+        }
       }
 
       if (typeof p.qrSecret === 'string') p.qrSecret = p.qrSecret.trim();
@@ -438,6 +446,50 @@ const approveEmployee = async (req, res) => {
   }
 };
 
+const requestRenewal = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const { plan, notes } = req.body;
+    
+    if (!companyId) return res.status(400).json({ message: "Company ID required" });
+    if (!plan) return res.status(400).json({ message: "Plan is required" });
+
+    const company = await Company.findById(companyId);
+    if (!company) return res.status(404).json({ message: "Company not found" });
+
+    const owner = await User.findOne({ companyId, role: 'CompanyAdmin' });
+    
+    // Check if there is already a pending renewal inquiry
+    let inq = await Inquiry.findOne({ companyId, status: { $in: ['Renewal Requested', 'Payment Requested', 'Payment Under Verification'] } });
+
+    if (!inq) {
+      // Create a new inquiry for renewal
+      inq = new Inquiry({
+        companyName: company.name,
+        contactPerson: owner ? owner.name : 'Unknown',
+        email: company.email,
+        mobile: owner ? owner.mobile : '0000000000',
+        companyId: company._id,
+        plan: plan,
+        notes: notes || 'Renewal Request',
+        status: 'Renewal Requested'
+      });
+      await inq.save();
+    } else {
+      // Update existing
+      inq.plan = plan;
+      inq.notes = notes || inq.notes;
+      inq.status = 'Renewal Requested';
+      await inq.save();
+    }
+
+    res.json({ message: "Renewal request submitted successfully", status: "Renewal Requested" });
+  } catch (err) {
+    console.error("requestRenewal error:", err);
+    res.status(500).json({ message: "Failed to submit renewal request" });
+  }
+};
+
 module.exports = {
   getCompanyProfile,
   updateCompanyProfile,
@@ -447,5 +499,6 @@ module.exports = {
   getCompanyHRs,
   updateCompanyUser,
   approveEmployee,
-  addExpense
+  addExpense,
+  requestRenewal
 };

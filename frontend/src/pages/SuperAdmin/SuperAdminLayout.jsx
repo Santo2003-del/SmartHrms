@@ -25,8 +25,7 @@ const SuperAdminLayout = ({ children, title = "Dashboard" }) => {
     ];
 
     const handleLogout = () => {
-        logout();
-        navigate('/system-access-gmv2026');
+        logout('/');
     };
 
     return (

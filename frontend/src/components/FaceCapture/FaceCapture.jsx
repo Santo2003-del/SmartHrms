@@ -20,11 +20,19 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
 
     const loadModels = async () => {
       try {
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-        ]);
+        // Skip loading if models are already cached in memory
+        const alreadyLoaded =
+          faceapi.nets.tinyFaceDetector.isLoaded &&
+          faceapi.nets.faceLandmark68TinyNet?.isLoaded &&
+          faceapi.nets.faceRecognitionNet.isLoaded;
+
+        if (!alreadyLoaded) {
+          await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68TinyNet ? faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL) : faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+          ]);
+        }
         if (mounted) setModelsLoaded(true);
       } catch (err) {
         console.error(err);
@@ -52,17 +60,19 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
         return;
       }
 
-      const img = await faceapi.fetchImage(screenshot);
+      // Use direct video element when available for instantaneous processing without re-fetching base64
+      const videoEl = webcamRef.current.video;
+      const inputSource = (videoEl && videoEl.readyState === 4) ? videoEl : await faceapi.fetchImage(screenshot);
 
       const detection = await faceapi
         .detectSingleFace(
-          img,
+          inputSource,
           new faceapi.TinyFaceDetectorOptions({
-            inputSize: 224,
-            scoreThreshold: 0.6
+            inputSize: 160,
+            scoreThreshold: 0.4
           })
         )
-        .withFaceLandmarks()
+        .withFaceLandmarks(true) // tiny landmarks for 3x faster speed
         .withFaceDescriptor();
 
       if (!detection) {
@@ -117,9 +127,10 @@ const FaceCapture = ({ onCapture, btnText = "Verify Face" }) => {
             mirrored
             screenshotFormat="image/jpeg"
             videoConstraints={{
-              width: 420,
-              height: 420,
-              facingMode: "user"
+              width: 320,
+              height: 320,
+              facingMode: "user",
+              frameRate: { ideal: 15 }
             }}
             className="webcam"
           />

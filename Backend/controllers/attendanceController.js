@@ -107,39 +107,17 @@ function squaredDistanceEarlyExit(a, b) {
   return sum;
 }
 
-/* ------------------ LOCATION (FAST) ------------------ */
+/* ------------------ LOCATION DISABLED ------------------ */
 function normalizeLoc(loc) {
-  if (!loc) return null;
-  const latRaw = (loc.lat ?? loc.latitude);
-  const lngRaw = (loc.lng ?? loc.longitude);
-  if (latRaw === undefined || lngRaw === undefined) return null;
-  const lat = Number(latRaw);
-  const lng = Number(lngRaw);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  return { lat, lng, address: loc.address || loc.addr || '' };
+  return null;
 }
 
 function distanceMeters(a, b) {
-  const R = 6371e3;
-  const φ1 = a.lat * Math.PI / 180;
-  const φ2 = b.lat * Math.PI / 180;
-  const Δφ = (b.lat - a.lat) * Math.PI / 180;
-  const Δλ = (b.lng - a.lng) * Math.PI / 180;
-
-  const x = Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-  return R * c;
+  return 0;
 }
 
 function isInsideOffice(userLocRaw, officeLocRaw, radiusMeters = 3000) {
-  const officeLoc = normalizeLoc(officeLocRaw);
-  if (!officeLoc) return true;
-  const userLoc = normalizeLoc(userLocRaw);
-  if (!userLoc) return false;
-  const dist = distanceMeters(userLoc, officeLoc);
-  return dist <= radiusMeters;
+  return true;
 }
 
 /* ------------------ IP + WIFI + QR (LIGHTWEIGHT) ------------------ */
@@ -193,21 +171,20 @@ function expectedQrCode(secret, todayStr) {
 /* ------------------ ATTENDANCE METHOD POLICY ------------------ */
 function resolveMethod(reqMethod, company) {
   const policy = company?.attendancePolicy || {};
-  const allowed = policy.allowedMethods || ['GPS_FACE', 'MANUAL_HR'];
-  const m = (reqMethod || 'GPS_FACE').toString().trim();
-  return allowed.includes(m) ? m : 'GPS_FACE';
+  const allowed = policy.allowedMethods || ['FACE_ONLY', 'MANUAL_HR', 'MANUAL_PUNCH'];
+  const m = (reqMethod || 'FACE_ONLY').toString().trim();
+  return allowed.includes(m) ? m : (policy.requireFace === false ? 'MANUAL_PUNCH' : 'FACE_ONLY');
 }
 
 function needsFace(method, company) {
   const policy = company?.attendancePolicy || {};
   if (policy.requireFace === false) return false;
-  return method !== 'MANUAL_HR';
+  if (method === 'MANUAL_PUNCH' || method === 'MANUAL_HR') return false;
+  return true;
 }
 
 function needsGps(method, company) {
-  const policy = company?.attendancePolicy || {};
-  if (policy.requireGps === true && method !== 'MANUAL_HR') return true;
-  return method === 'GPS_FACE';
+  return false;
 }
 
 /* ================== CONTROLLERS ================== */
@@ -302,14 +279,7 @@ const punchIn = async (req, res) => {
     let userLoc = location;
     if (typeof location === 'string') userLoc = safeJsonParse(location);
 
-    if (needsGps(chosenMethod, company)) {
-      if (!userLoc) return res.status(400).json({ message: 'Location required for this attendance method' });
-      if (company?.location?.lat != null && company?.location?.lng != null) {
-        if (!isInsideOffice(userLoc, company.location, radius)) {
-          return res.status(403).json({ message: `❌ You are too far from office. Allowed radius: ${radius}m` });
-        }
-      }
-    }
+    // Geolocation checks removed
 
     let imagePath = '';
     if (image && typeof image === 'string') {
@@ -328,7 +298,7 @@ const punchIn = async (req, res) => {
         companyId: company._id,
         date: today,
         punchInTime: new Date(),
-        location: userLoc ? normalizeLoc(userLoc) : null,
+        location: userLoc && userLoc.address ? { address: userLoc.address } : null,
         inImage: imagePath,
         status: 'Present',
         mode: chosenMethod === 'MANUAL_HR' ? 'Manual' : 'Office',
@@ -451,7 +421,18 @@ const punchOut = async (req, res) => {
     const netMs = Math.max(0, rawMs - breakMs);
     const hours = Number((netMs / 36e5).toFixed(2));
     att.netWorkHours = Number.isFinite(hours) ? hours : 0;
-    if (att.netWorkHours > 0 && att.netWorkHours < 4) att.status = 'HalfDay';
+
+    const expected = Number(company?.attendancePolicy?.expectedWorkHours) || 8;
+    const minHalf = Number(company?.attendancePolicy?.minimumHalfDayHours) || 4;
+    const minFull = Number(company?.attendancePolicy?.minimumFullDayHours) || 8;
+
+    if (att.netWorkHours >= minFull) {
+      att.status = 'Completed';
+    } else if (att.netWorkHours >= minHalf) {
+      att.status = 'HalfDay';
+    } else {
+      att.status = 'Absent';
+    }
 
     await att.save();
     return res.json({ message: 'Punch Out Successful 🏠', attendance: att });

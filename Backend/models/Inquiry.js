@@ -19,8 +19,8 @@ const InquirySchema = new mongoose.Schema(
     contactPerson: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     mobile: { type: String, required: true },
-    address: { type: String, required: true },
-    password: { type: String, required: true },
+    address: { type: String, required: false },
+    password: { type: String, required: false },
 
     // New Fields
     city: { type: String, default: '' },
@@ -30,18 +30,21 @@ const InquirySchema = new mongoose.Schema(
     website: { type: String, default: '' },
     gstin: { type: String, default: '' },
 
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
+    lat: { type: Number, required: false },
+    lng: { type: Number, required: false },
 
-    // radius chosen at inquiry time
-    radius: { type: Number, default: 3000 },
-
-    // office timing + timezone chosen at inquiry time
-    officeTiming: { type: OfficeTimingSchema, default: undefined },
+    // Subscriptions
+    plan: { type: String, required: false },
+    message: { type: String, required: false },
+    referenceId: { type: String, required: false, sparse: true },
+    paymentRef: { type: String, required: false },
+    paymentAmount: { type: Number, required: false },
+    paymentDate: { type: Date, required: false },
+    notes: { type: String, required: false },
 
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', default: null },
 
-    status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending', index: true }
+    status: { type: String, enum: ['Pending Review', 'Pending', 'Approved', 'Payment Requested', 'Payment Under Verification', 'Active', 'Rejected', 'Renewal Requested', 'Expired', 'Suspended'], default: 'Pending Review', index: true }
   },
   { timestamps: true }
 );

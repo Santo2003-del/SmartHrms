@@ -10,9 +10,15 @@ router.use(protect, superAdminOnly);
 // Dashboard
 router.get('/dashboard-data', controller.getDashboardData);
 
-// Inquiry provisioning
-router.post('/approve-inquiry', controller.approveInquiry);
+// Inquiry and Subscription provisioning
+router.get('/inquiries', controller.getInquiries);
+router.post('/inquiry/:id/action', controller.inquiryAction);
+router.post('/inquiry/:id/provision', controller.provisionCompany);
+router.post('/approve-inquiry', controller.approveInquiry); // Keep for legacy if needed
 router.put('/inquiry/:id', controller.updateInquiry);
+
+// Create company directly
+router.post('/company', controller.createCompanyDirectly);
 
 // Delete inquiry
 router.delete('/inquiry/:id', async (req, res) => {

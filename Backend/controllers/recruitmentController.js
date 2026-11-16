@@ -361,7 +361,9 @@ const updateApplicationStage = async (req, res) => {
     const { stage } = req.body;
     if (!stage) return res.status(400).json({ message: "stage required" });
 
-    const app = await Application.findById(req.params.id);
+    const companyId = getCompanyIdForHr(req);
+
+    const app = await Application.findOne({ _id: req.params.id, companyId });
     if (!app) return res.status(404).json({ message: "App not found" });
 
     const prev = app.stage;
@@ -546,7 +548,9 @@ const getCandidate = async (req, res) => {
     const id = req.params.id;
     if (!ensureObjectId(id)) return res.status(400).json({ message: "Invalid ID" });
 
-    const app = await Application.findById(id).select("candidate trackId createdAt").lean();
+    const companyId = getCompanyIdForHr(req);
+
+    const app = await Application.findOne({ _id: id, companyId }).select("candidate trackId createdAt").lean();
     if (!app?.candidate) return res.status(404).json({ message: "Candidate not found" });
 
     return res.json({

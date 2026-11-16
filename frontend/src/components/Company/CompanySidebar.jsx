@@ -18,8 +18,7 @@ const CompanySidebar = () => {
     const location = useLocation();
 
     const handleLogout = () => {
-        logout();
-        navigate("/company-login");
+        logout('/');
     };
 
     const scrollToSection = (id) => {

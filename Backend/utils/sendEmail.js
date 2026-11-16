@@ -1,15 +1,30 @@
+const dns = require('dns');
+try {
+    dns.setDefaultResultOrder('ipv4first');
+} catch (e) { }
+
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
     try {
+        const isGmail = (process.env.SMTP_HOST || '').includes('gmail') || (process.env.SMTP_USER || '').includes('@gmail.com');
+        const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
+        const port = Number(process.env.SMTP_PORT) || 587;
+
         const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT, // 587 or 465
-            secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
+            host: isGmail ? 'smtp.gmail.com' : process.env.SMTP_HOST,
+            port: port,
+            secure: port === 465,
             auth: {
                 user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
+                pass: pass,
             },
+            tls: {
+                rejectUnauthorized: false,
+            },
+            connectionTimeout: 15000,
+            greetingTimeout: 10000,
+            socketTimeout: 15000,
         });
 
         const message = {
@@ -17,16 +32,14 @@ const sendEmail = async (options) => {
             to: options.email,
             subject: options.subject,
             text: options.message,
-            html: options.html, // Optional: if you want to send HTML emails
+            html: options.html,
         };
 
         const info = await transporter.sendMail(message);
-        console.log('Message sent: %s', info.messageId);
+        console.log('Email sent successfully: %s', info.messageId);
         return info;
     } catch (error) {
-        console.error('Error sending email:', error);
-        // Don't throw error to avoid breaking the main flow, just log it.
-        // unless it's critical.
+        console.error('Error sending email:', error.message || error);
         return null;
     }
 };
