@@ -14,7 +14,7 @@ const PDFDocument = require('pdfkit');
 /* ----------------------- Helpers ----------------------- */
 const getReqUserId = (req) => req?.user?._id?.toString?.() || req?.user?.id || null;
 
-const isHrRole = (role) => ['Admin', 'CompanyAdmin', 'SuperAdmin'].includes(role);
+const isHrRole = (role) => ['Admin', 'CompanyAdmin', 'Company', 'HR', 'SuperAdmin'].includes(role);
 
 const clampStr = (s, max = 1000) => {
   if (s == null) return '';
