@@ -122,6 +122,12 @@ app.use(compression());
 // 8. Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+// Serve React production build if available
+const frontendBuild = path.join(__dirname, "../frontend/build");
+if (fs.existsSync(frontendBuild)) {
+  app.use(express.static(frontendBuild));
+}
+
 // ═══════════════════════════════════════════════
 //  API ROUTES
 // ═══════════════════════════════════════════════
@@ -136,6 +142,20 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/recruitment", recruitmentRoutes);
 app.use("/api/onboarding", onboardingRoutes);
 app.use("/api/support", require("./routes/supportRoutes"));
+
+// ═══════════════════════════════════════════════
+//  SPA FRONTEND FALLBACK (Serve index.html for non-API routes)
+// ═══════════════════════════════════════════════
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.originalUrl.startsWith("/api") || req.originalUrl.startsWith("/uploads")) {
+    return next();
+  }
+  const indexPath = path.join(frontendBuild, "index.html");
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  next();
+});
 
 // ═══════════════════════════════════════════════
 //  ERROR HANDLING
