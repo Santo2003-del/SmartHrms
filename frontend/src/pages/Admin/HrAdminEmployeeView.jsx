@@ -63,12 +63,13 @@ const getApiHost = () => {
 
 const getImageUrl = (path) => {
   if (!path) return "https://via.placeholder.com/150";
-  const p = String(path);
-  if (p.startsWith("http")) return p;
+  const p = String(path).trim();
+  if (p.startsWith("http://") || p.startsWith("https://") || p.startsWith("data:")) return p;
 
   const host = getApiHost();
   const clean = p.replace(/\\/g, "/").replace(/^\/+/, "");
-  return `${host}/${clean}`;
+  const fullPath = clean.startsWith("uploads/") ? clean : `uploads/${clean}`;
+  return `${host}/${fullPath}`;
 };
 
 const formatTime = (d) => {
@@ -149,10 +150,16 @@ const HrAdminEmployeeView = () => {
   const [history, setHistory] = useState([]);
   const [leaves, setLeaves] = useState([]);
 
-  // Payroll state
-  const [dates, setDates] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0],
-    endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split("T")[0],
+  // Payroll state (using local date parts to prevent timezone shift)
+  const [dates, setDates] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+    return {
+      startDate: `${y}-${m}-01`,
+      endDate: `${y}-${m}-${String(lastDay).padStart(2, "0")}`,
+    };
   });
   const [payrollStats, setPayrollStats] = useState(null);
   const [calculating, setCalculating] = useState(false);
@@ -162,7 +169,13 @@ const HrAdminEmployeeView = () => {
   const [downloading, setDownloading] = useState(false);
 
   // Manual Attendance
-  const [manualDate, setManualDate] = useState(new Date().toISOString().split("T")[0]);
+  const [manualDate, setManualDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  });
   const [manualStatus, setManualStatus] = useState("Present");
   const [inTime, setInTime] = useState("");
   const [outTime, setOutTime] = useState("");

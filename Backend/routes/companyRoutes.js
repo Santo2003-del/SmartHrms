@@ -91,6 +91,9 @@ router.post('/employee/approve', hrOnly, controller.approveEmployee);
 router.get('/payroll/:userId', hrOnly, hrController.getPayrollStats);
 router.get('/payroll/salary-slip/:userId', hrOnly, hrController.generateSalarySlip);
 
+// ✅ Attendance Routes (Manual punch by HR/Company Admin)
+router.post('/attendance/manual', hrOnly, hrController.addManualAttendance);
+
 // ✅ Leave Routes (For Employee View)
 router.get('/leaves/employee/:userId', hrOnly, leaveController.getEmployeeLeaves);
 

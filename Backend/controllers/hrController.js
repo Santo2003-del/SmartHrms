@@ -560,14 +560,23 @@ const getPayrollStats = async (req, res) => {
     const tz = company?.officeTiming?.timeZone || 'Asia/Kolkata';
 
     const now = new Date();
-    const start = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12, 0, 0));
-    const end = req.query.endDate ? new Date(req.query.endDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 12, 0, 0));
+    let start = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12, 0, 0));
+    let end = req.query.endDate ? new Date(req.query.endDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 12, 0, 0));
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       return res.status(400).json({ message: 'Invalid date range' });
     }
 
-    const dayStrings = getDateStringsBetweenInTZ(start, end, tz);
+    if (start.getTime() > end.getTime()) {
+      const tmp = start;
+      start = end;
+      end = tmp;
+    }
+
+    let dayStrings = getDateStringsBetweenInTZ(start, end, tz);
+    if (!dayStrings || !dayStrings.length) {
+      dayStrings = [dateStrInTZ(start, tz)];
+    }
     const startStr = dayStrings[0];
     const endStr = dayStrings[dayStrings.length - 1];
 
@@ -710,10 +719,23 @@ const generateSalarySlip = async (req, res) => {
     const tz = company?.officeTiming?.timeZone || 'Asia/Kolkata';
 
     const now = new Date();
-    const start = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12, 0, 0));
-    const end = req.query.endDate ? new Date(req.query.endDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 12, 0, 0));
+    let start = req.query.startDate ? new Date(req.query.startDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 12, 0, 0));
+    let end = req.query.endDate ? new Date(req.query.endDate) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 12, 0, 0));
 
-    const dayStrings = getDateStringsBetweenInTZ(start, end, tz);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return res.status(400).json({ message: 'Invalid date range' });
+    }
+
+    if (start.getTime() > end.getTime()) {
+      const tmp = start;
+      start = end;
+      end = tmp;
+    }
+
+    let dayStrings = getDateStringsBetweenInTZ(start, end, tz);
+    if (!dayStrings || !dayStrings.length) {
+      dayStrings = [dateStrInTZ(start, tz)];
+    }
     const startStr = dayStrings[0];
     const endStr = dayStrings[dayStrings.length - 1];
 
