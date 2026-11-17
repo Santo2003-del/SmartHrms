@@ -54,6 +54,20 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  const selectedCompany = useMemo(() => {
+    return companies.find((c) => String(c._id || c.id) === String(formData.companyId));
+  }, [companies, formData.companyId]);
+
+  const isFaceRequired = useMemo(() => {
+    if (!selectedCompany) return true;
+    const pol = selectedCompany.attendancePolicy;
+    if (!pol) return true;
+    if (pol.requireFace === false) return false;
+    if (pol.method === "MANUAL_PUNCH") return false;
+    if (Array.isArray(pol.allowedMethods) && pol.allowedMethods.includes("MANUAL_PUNCH") && !pol.requireFace) return false;
+    return true;
+  }, [selectedCompany]);
+
   const MODEL_URL = useMemo(() => {
     return (
       readEnv("VITE_FACE_MODEL_URL") ||
@@ -162,7 +176,7 @@ const Register = () => {
 
   const validate = () => {
     if (!formData.companyId) return toast.warning("Please select your Organization"), false;
-    if (!faceDescriptor) return toast.warning("Face Scan is mandatory"), false;
+    if (isFaceRequired && !faceDescriptor) return toast.warning("Face Scan is mandatory for your organization"), false;
     if (!profileImage) return toast.warning("Profile Photo is required"), false;
 
     if ((formData.password || "").length < 6) {
@@ -184,7 +198,7 @@ const Register = () => {
       Object.entries(formData).forEach(([k, v]) => data.append(k, v));
 
       data.append("image", profileImage);
-      data.append("faceDescriptor", JSON.stringify(faceDescriptor));
+      data.append("faceDescriptor", faceDescriptor ? JSON.stringify(faceDescriptor) : "[]");
 
       await registerEmployee(data);
 
@@ -244,22 +258,95 @@ const Register = () => {
           <div className="stepper">
             <div className={`step ${step >= 1 ? 'active' : ''}`} onClick={() => setStep(1)}>
               <div className="step-circle">1</div>
-              <span>Biometrics</span>
+              <span>{formData.companyId && !isFaceRequired ? "Biometrics (Optional)" : "Biometrics"}</span>
             </div>
             <div className="step-line"></div>
-            <div className={`step ${step >= 2 ? 'active' : ''}`} onClick={() => faceDescriptor ? setStep(2) : toast.warn("Complete Biometrics first")}>
+            <div
+              className={`step ${step >= 2 ? 'active' : ''}`}
+              onClick={() => {
+                if (isFaceRequired && !faceDescriptor) {
+                  return toast.warn("Complete Biometrics first (required by company)");
+                }
+                setStep(2);
+              }}
+            >
               <div className="step-circle">2</div>
               <span>Details</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="form-content">
+            {/* Quick Organization Selector */}
+            <div className="field-group" style={{ marginBottom: '16px' }}>
+              <label>Select Organization <span className="req">*</span></label>
+              <div className="input-wrap">
+                <FaBuilding className="field-icon" />
+                <select
+                  name="companyId"
+                  value={formData.companyId}
+                  onChange={(e) => {
+                    setField("companyId", e.target.value);
+                    const sel = companies.find((c) => String(c._id || c.id) === String(e.target.value));
+                    if (sel && sel?.attendancePolicy?.requireFace === false) {
+                      toast.info("This organization allows manual attendance! Face scan is not required.");
+                    }
+                  }}
+                  required
+                  disabled={companiesLoading}
+                >
+                  <option value="">{companiesLoading ? "Loading organizations..." : "Choose Organization"}</option>
+                  {companies.map((c) => (
+                    <option key={c._id || c.id} value={c._id || c.id}>
+                      {c.name || c.companyName} {c?.attendancePolicy?.requireFace === false ? "— (Manual Attendance)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.companyId && (
+                <div style={{ marginTop: '8px', fontSize: '12.5px', fontWeight: 600 }}>
+                  {!isFaceRequired ? (
+                    <div style={{ color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(16,185,129,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaCheckCircle /> Manual Attendance Enabled — Face scan is NOT required
+                      </span>
+                      {step === 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setStep(2)}
+                          style={{
+                            background: '#10b981',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            padding: '4px 10px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Skip to Details ➔
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ color: '#60a5fa', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(59,130,246,0.1)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.2)' }}>
+                      <FaCamera /> Face Biometrics Mandatory for this Organization
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* STEP 1: Biometrics */}
             <div className={`step-content fade-in ${step === 1 ? 'active' : 'hidden'}`}>
               <div className="form-section">
                 <h3 className="section-title">Facial Verification</h3>
-                <p className="section-sub">Ensure your face is clearly visible to register your biometrics securely.</p>
+                <p className="section-sub">
+                  {formData.companyId && !isFaceRequired
+                    ? "Face scan is optional for your company. You can skip directly to details or capture face for profile."
+                    : "Ensure your face is clearly visible to register your biometrics securely."}
+                </p>
 
                 <div className="camera-box">
                   {modelLoading ? (
@@ -316,10 +403,26 @@ const Register = () => {
                         <FaCamera />
                       </div>
                       <h4>Provide Face Biometrics</h4>
-                      <p>Used for daily attendance and secure access.</p>
-                      <button type="button" className="submit-btn" style={{ marginTop: '20px' }} onClick={() => setIsCameraOpen(true)}>
-                        Start Camera
-                      </button>
+                      <p>
+                        {formData.companyId && !isFaceRequired
+                          ? "Optional: Your company supports manual attendance without face scan."
+                          : "Used for daily attendance and secure access."}
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '16px', alignItems: 'center' }}>
+                        <button type="button" className="submit-btn" onClick={() => setIsCameraOpen(true)}>
+                          Start Camera
+                        </button>
+                        {formData.companyId && !isFaceRequired && (
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setStep(2)}
+                            style={{ background: '#10b981', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 700 }}
+                          >
+                            Skip Face Scan & Continue to Details ➔
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

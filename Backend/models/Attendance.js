@@ -42,7 +42,7 @@ const attendanceSchema = new mongoose.Schema(
 
     source: {
       type: String,
-      enum: ['GPS_FACE', 'FACE_ONLY', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR', 'SYSTEM'],
+      enum: ['GPS_FACE', 'FACE_ONLY', 'MANUAL_PUNCH', 'QR_FACE', 'WIFI_FACE', 'IP_FACE', 'MANUAL_HR', 'SYSTEM'],
       default: 'GPS_FACE',
       index: true
     },

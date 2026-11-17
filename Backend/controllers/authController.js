@@ -228,7 +228,7 @@ const registerEmployee = async (req, res) => {
 /* ================= 4) PUBLIC: GET ACTIVE COMPANIES ================= */
 const getActiveCompanies = async (req, res) => {
   try {
-    const companies = await Company.find({ status: 'Active' }).select('_id name');
+    const companies = await Company.find({ status: 'Active' }).select('_id name attendancePolicy');
     res.json(companies);
   } catch {
     res.status(500).json({ message: 'Failed to load companies' });
