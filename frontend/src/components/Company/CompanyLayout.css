@@ -192,6 +192,10 @@
     width: calc(100% - var(--sidebar-w));
     padding: 0;
     transition: margin-left 0.3s ease, width 0.3s ease;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* RESPONSIVENESS */

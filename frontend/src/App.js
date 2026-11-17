@@ -68,6 +68,9 @@ import MyOnboarding from "./pages/Onboarding/MyOnboarding";
 
 // ✅ NEW Layouts
 import CompanyLayout from "./components/Company/CompanyLayout";
+import HrLayout from "./components/HR/HrLayout";
+import EmployeeLayout from "./components/Employee/EmployeeLayout";
+import SuperAdminLayout from "./components/SuperAdmin/SuperAdminLayout";
 
 /* =========================================================
    CONDITIONAL NAVBAR COMPONENT
@@ -146,10 +149,12 @@ function App() {
 
           {/* SUPER ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['SuperAdmin']} />}>
-            <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
-            <Route path="/super-admin/inquiries" element={<InquiryManagement />} />
-            {/* <Route path="/super-admin/leaves" element={<LeaveManagement />} /> */}
-            <Route path="/super-admin/support" element={<SupportTicketManagement />} />
+            <Route element={<SuperAdminLayout />}>
+              <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+              <Route path="/super-admin/inquiries" element={<InquiryManagement />} />
+              {/* <Route path="/super-admin/leaves" element={<LeaveManagement />} /> */}
+              <Route path="/super-admin/support" element={<SupportTicketManagement />} />
+            </Route>
           </Route>
 
           {/* COMPANY OWNER */}
@@ -176,31 +181,35 @@ function App() {
 
           {/* HR ADMIN */}
           <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
-            <Route path="/hr/dashboard" element={<HrAdminDashboard />} />
-            <Route path="/hr/view-employee/:userId" element={<AdminEmployeeView />} />
+            <Route element={<HrLayout />}>
+              <Route path="/hr/dashboard" element={<HrAdminDashboard />} />
+              <Route path="/hr/view-employee/:userId" element={<AdminEmployeeView />} />
 
-            {/* ✅ NEW Tasks */}
-            <Route path="/hr/tasks" element={<Tasks />} />
+              {/* ✅ NEW Tasks */}
+              <Route path="/hr/tasks" element={<Tasks />} />
 
-            {/* ✅ NEW Recruitment */}
-            <Route path="/hr/recruitment/jobs" element={<Jobs />} />
-            <Route path="/hr/recruitment/applications" element={<Applications />} />
-            <Route path="/hr/recruitment/interviews" element={<Interviews />} />
+              {/* ✅ NEW Recruitment */}
+              <Route path="/hr/recruitment/jobs" element={<Jobs />} />
+              <Route path="/hr/recruitment/applications" element={<Applications />} />
+              <Route path="/hr/recruitment/interviews" element={<Interviews />} />
 
-            {/* ✅ NEW Onboarding */}
-            <Route path="/hr/onboarding/templates" element={<Templates />} />
-            <Route path="/hr/onboarding/assignments" element={<Assignments />} />
+              {/* ✅ NEW Onboarding */}
+              <Route path="/hr/onboarding/templates" element={<Templates />} />
+              <Route path="/hr/onboarding/assignments" element={<Assignments />} />
+            </Route>
           </Route>
 
           {/* EMPLOYEE */}
           <Route element={<ProtectedRoute allowedRoles={['Employee', 'Admin']} />}>
-            <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-            <Route path="/employee/attendance" element={<Attendance />} />
-            <Route path="/employee/leaves" element={<LeaveRequest />} />
+            <Route element={<EmployeeLayout />}>
+              <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+              <Route path="/employee/attendance" element={<Attendance />} />
+              <Route path="/employee/leaves" element={<LeaveRequest />} />
 
-            {/* ✅ NEW Tasks & Onboarding */}
-            <Route path="/employee/tasks" element={<Tasks />} />
-            <Route path="/employee/onboarding" element={<MyOnboarding />} />
+              {/* ✅ NEW Tasks & Onboarding */}
+              <Route path="/employee/tasks" element={<Tasks />} />
+              <Route path="/employee/onboarding" element={<MyOnboarding />} />
+            </Route>
           </Route>
 
           {/* 404 Fallback */}

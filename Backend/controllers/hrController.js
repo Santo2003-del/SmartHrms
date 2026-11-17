@@ -1,4 +1,6 @@
 // Backend/controllers/hrController.js
+const path = require('path');
+const fs = require('fs');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Leave = require('../models/Leave');
@@ -822,15 +824,24 @@ const generateSalarySlip = async (req, res) => {
     const departmentStr = user.department || 'Engineering (Development)';
     const locationStr = companyAddress.split(',').slice(-2).join(',').trim() || 'Pune, Maharashtra';
 
-    // Start Landscape A4 Document
+    // Start Landscape A4 Document safely buffered
     const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 36 });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename=SalarySlip_${String(user.name || 'Employee').replace(/\s+/g, '_')}_${monthName.replace(/\s+/g, '_')}.pdf`
-    );
-
-    doc.pipe(res);
+    const chunks = [];
+    doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('end', () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename=SalarySlip_${String(user.name || 'Employee').replace(/\s+/g, '_')}_${monthName.replace(/\s+/g, '_')}.pdf`
+      );
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.send(pdfBuffer);
+    });
+    doc.on('error', (pdfErr) => {
+      console.error('PDFDocument internal error:', pdfErr);
+      if (!res.headersSent) res.status(500).json({ message: 'PDF Generation Failed' });
+    });
 
     /* ================= 1. HEADER ================= */
     let logoDrawn = false;

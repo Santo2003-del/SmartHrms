@@ -7,6 +7,14 @@ try {
   // Ignore in older node versions
 }
 
+// Global crash resilience: Prevent unhandled errors from terminating Node server
+process.on("uncaughtException", (err) => {
+  console.error("CRITICAL UNCAUGHT EXCEPTION PREVENTED:", err);
+});
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("CRITICAL UNHANDLED REJECTION PREVENTED:", reason);
+});
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
