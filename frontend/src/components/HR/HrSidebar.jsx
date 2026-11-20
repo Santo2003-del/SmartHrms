@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   FaLayerGroup,
   FaThLarge,
@@ -9,21 +9,31 @@ import {
   FaUserCheck,
   FaCalendarCheck,
   FaSignOutAlt,
-  FaFileInvoiceDollar,
+  FaCalendarAlt,
+  FaUmbrellaBeach,
+  FaClipboardList,
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import "../Company/CompanyLayout.css";
 
 const HrSidebar = () => {
   const { logout, user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => {
     logout("/");
   };
 
-  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + "/");
+  const searchParams = new URLSearchParams(location.search);
+  const currentTab = searchParams.get("tab") || "employees";
+
+  const isHrTabActive = (tab) => {
+    return location.pathname === "/hr/dashboard" && currentTab === tab;
+  };
+
+  const isPathActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + "/");
+  };
 
   return (
     <aside className="company-sidebar">
@@ -43,63 +53,91 @@ const HrSidebar = () => {
       {/* MENU */}
       <nav className="sidebar-menu">
         <div className="menu-group">
-          <span className="menu-label">Main Dashboard</span>
+          <span className="menu-label">HR Management</span>
 
           <Link
-            to="/hr/dashboard"
-            className={`menu-item ${location.pathname === "/hr/dashboard" ? "active" : ""}`}
+            to="/hr/dashboard?tab=employees"
+            className={`menu-item ${isHrTabActive("employees") ? "active" : ""}`}
           >
-            <FaThLarge /> Overview & Directory
+            <FaUsers /> Directory
           </Link>
 
           <Link
-            to="/hr/tasks"
-            className={`menu-item ${isActive("/hr/tasks") ? "active" : ""}`}
+            to="/hr/dashboard?tab=recruitment"
+            className={`menu-item ${isHrTabActive("recruitment") ? "active" : ""}`}
           >
-            <FaTasks /> Tasks Management
+            <FaBriefcase /> Recruitment
+          </Link>
+
+          <Link
+            to="/hr/dashboard?tab=tasks"
+            className={`menu-item ${isHrTabActive("tasks") ? "active" : ""}`}
+          >
+            <FaTasks /> Tasks
+          </Link>
+
+          <Link
+            to="/hr/dashboard?tab=leaves"
+            className={`menu-item ${isHrTabActive("leaves") ? "active" : ""}`}
+          >
+            <FaCalendarAlt /> Leaves
+          </Link>
+
+          <Link
+            to="/hr/dashboard?tab=onboarding"
+            className={`menu-item ${isHrTabActive("onboarding") ? "active" : ""}`}
+          >
+            <FaUserCheck /> Onboarding
+          </Link>
+
+          <Link
+            to="/hr/dashboard?tab=holidays"
+            className={`menu-item ${isHrTabActive("holidays") ? "active" : ""}`}
+          >
+            <FaUmbrellaBeach /> Holidays
           </Link>
         </div>
 
         <div className="menu-group">
-          <span className="menu-label">Recruitment & Hiring</span>
+          <span className="menu-label">Recruitment Pipeline</span>
 
           <Link
             to="/hr/recruitment/jobs"
-            className={`menu-item ${isActive("/hr/recruitment/jobs") ? "active" : ""}`}
+            className={`menu-item ${isPathActive("/hr/recruitment/jobs") ? "active" : ""}`}
           >
             <FaBriefcase /> Job Postings
           </Link>
 
           <Link
             to="/hr/recruitment/applications"
-            className={`menu-item ${isActive("/hr/recruitment/applications") ? "active" : ""}`}
+            className={`menu-item ${isPathActive("/hr/recruitment/applications") ? "active" : ""}`}
           >
             <FaUsers /> Applications
           </Link>
 
           <Link
             to="/hr/recruitment/interviews"
-            className={`menu-item ${isActive("/hr/recruitment/interviews") ? "active" : ""}`}
+            className={`menu-item ${isPathActive("/hr/recruitment/interviews") ? "active" : ""}`}
           >
             <FaCalendarCheck /> Interviews
           </Link>
         </div>
 
         <div className="menu-group">
-          <span className="menu-label">Onboarding & Staff</span>
+          <span className="menu-label">Onboarding Setup</span>
 
           <Link
             to="/hr/onboarding/templates"
-            className={`menu-item ${isActive("/hr/onboarding/templates") ? "active" : ""}`}
+            className={`menu-item ${isPathActive("/hr/onboarding/templates") ? "active" : ""}`}
           >
-            <FaUserCheck /> Templates
+            <FaClipboardList /> Templates
           </Link>
 
           <Link
             to="/hr/onboarding/assignments"
-            className={`menu-item ${isActive("/hr/onboarding/assignments") ? "active" : ""}`}
+            className={`menu-item ${isPathActive("/hr/onboarding/assignments") ? "active" : ""}`}
           >
-            <FaUsers /> Assignments
+            <FaUserCheck /> Assignments
           </Link>
         </div>
       </nav>

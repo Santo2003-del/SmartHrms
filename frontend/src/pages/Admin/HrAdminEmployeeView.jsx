@@ -1543,7 +1543,7 @@ const HrAdminEmployeeView = () => {
           --orange:#f59e0b;
         }
 
-        .view-page{padding:18px;background:var(--bg);min-height:100vh;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:var(--text);max-width:1400px;margin:0 auto;}
+        .view-page{padding:18px;background:var(--bg);min-height:100vh;font-family:inherit;color:var(--text);max-width:100%;width:100%;box-sizing:border-box;margin:0 auto;}
 
         /* Header */
         .view-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;background:var(--white);padding:14px 16px;border-radius:14px;border:1px solid var(--border);box-shadow:0 8px 22px rgba(0,0,0,0.04);gap:10px;flex-wrap:wrap;}
@@ -1670,7 +1670,7 @@ const HrAdminEmployeeView = () => {
         .btn-xs.reject{background:#fee2e2;color:#991b1b;}
 
         /* Responsive */
-        @media (max-width: 1100px){
+        @media (max-width: 1280px){
           .grid-layout{grid-template-columns:1fr;}
           .stats-row{grid-template-columns:1fr 1fr;}
         }

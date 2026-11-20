@@ -28,9 +28,88 @@ import CandidateProfileModal from "../../components/Modals/CandidateProfileModal
 import Pagination from "../../components/Pagination";
 
 const Interviews = () => {
-  // ... existing state ... 
+  const [items, setItems] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState({
+    applicationId: "",
+    scheduledAt: "",
+    mode: "Video",
+    meetingLink: "",
+    location: "",
+    notes: "",
+  });
+  const [selectedApp, setSelectedApp] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
-  // After filtered definition ...
+  const getCandidate = (a) => a?.candidateId || a?.candidate || {};
+  const fmt = (d) => {
+    if (!d) return "TBD";
+    try {
+      const dt = new Date(d);
+      return dt.toLocaleString([], {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return String(d);
+    }
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [res, appRes] = await Promise.all([
+        API.get("/recruitment/interview"),
+        API.get("/recruitment/application").catch(() => ({ data: [] })),
+      ]);
+      setItems(res.data?.data || res.data || []);
+      setApplications(appRes.data?.data || appRes.data || []);
+    } catch (e) {
+      toast.error(e?.response?.data?.message || "Failed to load interviews");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const stats = useMemo(() => {
+    const list = items || [];
+    return {
+      total: list.length,
+      pending: list.filter((x) => x.status === "Pending Schedule" || x.status === "Scheduled").length,
+      scheduled: list.filter((x) => x.status === "Scheduled").length,
+      completed: list.filter((x) => x.status === "Completed").length,
+      cancelled: list.filter((x) => x.status === "Cancelled" || x.status === "No Show").length,
+    };
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    return (items || []).filter((item) => {
+      const app = item.applicationId || {};
+      const cand = getCandidate(app);
+      const name = String(cand?.name || "").toLowerCase();
+      const job = String(app?.jobId?.title || "").toLowerCase();
+      const notes = String(item.notes || "").toLowerCase();
+      const mode = String(item.mode || "").toLowerCase();
+      const q = search.trim().toLowerCase();
+
+      const matchQ = !q || name.includes(q) || job.includes(q) || notes.includes(q) || mode.includes(q);
+      const matchStatus = statusFilter === "All" || item.status === statusFilter;
+      return matchQ && matchStatus;
+    });
+  }, [items, search, statusFilter]);
+
   const pager = useClientPagination(filtered);
   const { paginatedItems } = pager;
 

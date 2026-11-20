@@ -657,50 +657,15 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="edash">
-      {/* Backdrop for mobile sidebar */}
-      {sidebarOpen && <div className="edash-backdrop" onClick={() => setSidebarOpen(false)} />}
-
-      {/* ── LEFT SIDEBAR ── */}
-      <aside className={`edash-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="edash-sb-brand">
-          <div className="edash-sb-icon"><FaLayerGroup /></div>
-          <h2 className="edash-sb-title">Smart<span>Hrms</span></h2>
-          <button className="edash-sb-close" onClick={() => setSidebarOpen(false)}><FaTimes /></button>
-        </div>
-
-        <nav className="edash-sb-nav">
-          <span className="edash-sb-label">Main</span>
-          {NAV_ITEMS.map(item => (
-            <button key={item.path}
-              className={`edash-sb-link ${location.pathname === item.path ? "active" : ""}`}
-              onClick={() => { navigate(item.path); setSidebarOpen(false); }}>
-              {item.icon} {item.label}
-            </button>
-          ))}
-        </nav>
-
-        <div className="edash-sb-footer">
-          <div className="edash-sb-user">
-            <div className="edash-sb-avatar">{(profile?.name || user.name || "E")[0].toUpperCase()}</div>
-            <div className="edash-sb-uinfo">
-              <span className="edash-sb-uname">{profile?.name || user.name}</span>
-              <span className="edash-sb-urole">{profile?.designation || "Employee"}</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
       {/* ── MAIN AREA ── */}
       <div className="edash-main">
         {/* Top Header */}
         <header className="edash-header">
-          <button className="edash-burger" onClick={() => setSidebarOpen(true)}><FaBars /></button>
           <div className="edash-hdr-right">
             <div className="edash-date"><FaCalendarAlt /><span>{new Date().toLocaleDateString("en-GB")}</span></div>
             <button className="edash-hdr-btn" onClick={() => fetchDashboardData(true)} style={{ opacity: refreshing ? 0.6 : 1 }}>
               <FaRedoAlt /> {refreshing ? "…" : "Refresh"}
             </button>
-            <button className="edash-logout" onClick={() => logout('/')} title="Logout"><FaSignOutAlt /></button>
           </div>
         </header>
 
@@ -963,39 +928,22 @@ const EmployeeDashboard = () => {
       {/* ── STYLES ── */}
       <style>{`
         /* ===== LAYOUT ===== */
-        .edash{display:flex;min-height:100vh;background:#f8fafc;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a}
-        .edash-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:90}
+        .edash{display:flex;min-height:100vh;background:#f8fafc;font-family:inherit;color:#0f172a;width:100%;max-width:100%;box-sizing:border-box}
+        .edash-backdrop{display:none}
 
-        /* ===== SIDEBAR ===== */
-        .edash-sidebar{position:fixed;top:0;left:0;width:260px;height:100vh;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;z-index:100;transition:transform .3s ease}
-        .edash-sb-brand{height:70px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid #e2e8f0;gap:12px}
-        .edash-sb-icon{width:36px;height:36px;background:#10b981;color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
-        .edash-sb-title{font-size:1.2rem;font-weight:700;color:#0f172a;margin:0}
-        .edash-sb-title span{color:#10b981}
-        .edash-sb-close{display:none;margin-left:auto;background:none;border:1px solid #e2e8f0;border-radius:8px;width:32px;height:32px;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:#64748b}
-        .edash-sb-nav{flex:1;padding:24px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
-        .edash-sb-label{font-size:.75rem;text-transform:uppercase;color:#64748b;font-weight:600;padding-left:12px;margin-bottom:8px;letter-spacing:.5px}
-        .edash-sb-link{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:8px;color:#64748b;font-weight:500;transition:all .2s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-size:.95rem;font-family:inherit}
-        .edash-sb-link:hover{background:#f1f5f9;color:#0f172a}
-        .edash-sb-link.active{background:#ecfdf5;color:#10b981;font-weight:600}
-        .edash-sb-footer{padding:16px;border-top:1px solid #e2e8f0;background:#f8fafc}
-        .edash-sb-user{display:flex;align-items:center;gap:12px}
-        .edash-sb-avatar{width:40px;height:40px;background:#10b981;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0}
-        .edash-sb-uinfo{display:flex;flex-direction:column;overflow:hidden}
-        .edash-sb-uname{font-size:.9rem;font-weight:600;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
-        .edash-sb-urole{font-size:.75rem;color:#64748b}
+        /* ===== SIDEBAR (HANDLED BY LAYOUT) ===== */
+        .edash-sidebar{display:none}
 
         /* ===== MAIN ===== */
-        .edash-main{margin-left:260px;width:calc(100% - 260px);min-height:100vh;display:flex;flex-direction:column}
-        .edash-header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:flex-end;padding:14px 24px;gap:10px}
-        .edash-burger{display:none;border:none;background:transparent;font-size:18px;cursor:pointer;color:#0f172a;margin-right:auto}
+        .edash-main{margin-left:0;width:100%;max-width:100%;min-height:100vh;display:flex;flex-direction:column;box-sizing:border-box}
+        .edash-header{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:flex-end;padding:14px 24px;gap:10px;box-sizing:border-box}
+        .edash-burger{display:none}
         .edash-hdr-right{display:flex;align-items:center;gap:10px}
         .edash-date{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#ecfdf5;color:#059669;font-weight:700;font-size:13px;border:1px solid #d1fae5}
         .edash-hdr-btn{border:1px solid #e2e8f0;background:#fff;padding:8px 14px;border-radius:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#0f172a;transition:.15s}
         .edash-hdr-btn:hover{background:#f8fafc}
-        .edash-logout{width:38px;height:38px;display:grid;place-items:center;border:none;border-radius:12px;cursor:pointer;background:#fee2e2;color:#ef4444;font-size:14px;transition:.15s}
-        .edash-logout:hover{background:#fecaca}
-        .edash-content{padding:24px;display:flex;flex-direction:column;gap:20px;max-width:1200px;width:100%}
+        .edash-logout{display:none}
+        .edash-content{padding:24px;display:flex;flex-direction:column;gap:20px;max-width:100%;width:100%;box-sizing:border-box}
 
         /* ===== WELCOME ===== */
         .edash-welcome{background:linear-gradient(135deg,#ecfdf5 0%,#fff 65%);border:1px solid #d1fae5;border-radius:16px;padding:24px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
@@ -1103,11 +1051,9 @@ const EmployeeDashboard = () => {
 
         /* ===== RESPONSIVE ===== */
         @media(max-width:1024px){
-          .edash-sidebar{transform:translateX(-100%)}
-          .edash-sidebar.open{transform:translateX(0)}
-          .edash-sb-close{display:flex}
+          .edash-sidebar{display:none}
           .edash-main{margin-left:0;width:100%}
-          .edash-burger{display:inline-flex}
+          .edash-burger{display:none}
           .edash-stats{grid-template-columns:repeat(2,1fr)}
           .edash-tables{grid-template-columns:1fr}
           .verifyGrid{grid-template-columns:1fr}

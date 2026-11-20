@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import API, { getApiErrorMessage } from "../../services/api";
 import { useClientPagination } from "../../utils/useClientPagination";
 import Pagination from "../../components/Pagination";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -128,20 +128,29 @@ const Pill = ({ text, tone = "neutral" }) => (
 
 const HrAdminDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { logout } = useAuth();
 
   /* ================= STATE ================= */
-  const { isLoaded: authLoaded } = useAuth(); // just to be safe if useAuth has properties
-
-  // PAGINATION HOOKS
-  // We use useClientPagination for each list. 
-  // Note: Hooks must be called unconditionally.
-  // We will pass the state arrays to them.
+  const { isLoaded: authLoaded } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState("employees");
+  const initialTab = searchParams.get("tab") || "employees";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (t) => {
+    setActiveTab(t);
+    setSearchParams({ tab: t });
+  };
 
   const [employees, setEmployees] = useState([]);
   const [leaves, setLeaves] = useState([]);
@@ -896,35 +905,31 @@ const HrAdminDashboard = () => {
       {/* TOP TABS */}
       <div className="tabs-wrapper">
         <div className="tabs-container">
-          <TabBtn active={activeTab === "employees"} onClick={() => setActiveTab("employees")} icon={<FaUsers />} label="Directory" />
+          <TabBtn active={activeTab === "employees"} onClick={() => handleTabChange("employees")} icon={<FaUsers />} label="Directory" />
           <TabBtn
             active={activeTab === "recruitment"}
-            onClick={() => {
-              setActiveTab("recruitment");
-            }}
+            onClick={() => handleTabChange("recruitment")}
             icon={<FaBriefcase />}
             label="Recruitment"
             badge={pendingApps}
           />
-          <TabBtn active={activeTab === "tasks"} onClick={() => setActiveTab("tasks")} icon={<FaTasks />} label="Tasks" />
+          <TabBtn active={activeTab === "tasks"} onClick={() => handleTabChange("tasks")} icon={<FaTasks />} label="Tasks" />
           <TabBtn
             active={activeTab === "leaves"}
-            onClick={() => setActiveTab("leaves")}
+            onClick={() => handleTabChange("leaves")}
             icon={<FaCalendarAlt />}
             label="Leaves"
             badge={pendingLeaves > 0 ? pendingLeaves : null}
           />
 
-          {/* ✅ REMOVED DUPLICATE TOP-LEVEL INTERVIEWS TAB */}
-
           <TabBtn
             active={activeTab === "onboarding"}
-            onClick={() => setActiveTab("onboarding")}
+            onClick={() => handleTabChange("onboarding")}
             icon={<FaLayerGroup />}
             label="Onboarding"
             badge={pendingOnboardingCount}
           />
-          <TabBtn active={activeTab === "holidays"} onClick={() => setActiveTab("holidays")} icon={<FaUmbrellaBeach />} label="Holidays" />
+          <TabBtn active={activeTab === "holidays"} onClick={() => handleTabChange("holidays")} icon={<FaUmbrellaBeach />} label="Holidays" />
         </div>
       </div>
 
@@ -2175,8 +2180,10 @@ const HrAdminDashboard = () => {
           padding: 18px;
           background: var(--bg);
           min-height: 100vh;
-          font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-          max-width: 1440px;
+          font-family: inherit;
+          max-width: 100%;
+          width: 100%;
+          box-sizing: border-box;
           margin: 0 auto;
         }
 
